@@ -29,6 +29,10 @@ function getMin(columns, data) {
 }
 
 
+function myFunction(){
+	alert("hallo!");
+}
+
 function join(lookupTable, mainTable, lookupKey, mainKey, select) {
     var l = lookupTable.length,
         m = mainTable.length,
@@ -57,7 +61,6 @@ var conns = d3.csv("/IN4086-Data-Visualisation/data/connections0.csv", function(
 	});
 });
 
-
 function getJoinAndRender(stations, connections) {
 	var resultIntermediate = join(stations, connections, "code", "s1", function(connection, station) {
 	    return {
@@ -83,6 +86,13 @@ function getJoinAndRender(stations, connections) {
 	resultFull.forEach(function(d) {
 		if (d.s1_lat != null && d.s1_lng != null && d.s2_lat != null && d.s2_lng != null) {
 			resultFullClean.push(d);
+		}
+	});
+
+	var intercityStations = [];
+	stations.forEach(function(d) {
+		if ( d.type != "stoptreinstation" ){
+			intercityStations.push(d);
 		}
 	});
 	
@@ -126,6 +136,7 @@ function getJoinAndRender(stations, connections) {
 	
 	lines.enter()
 	    .append("line")
+	    .on("click", function(d){ return myFunction();})
 	    .attr("x1", function(d){ return linearScaleX(d.s1_lng);})
 		.attr("y1", function(d){ return linearScaleY(d.s1_lat);})
 		.attr("x2", function(d){ return linearScaleX(d.s2_lng);})
@@ -134,14 +145,27 @@ function getJoinAndRender(stations, connections) {
 		.attr("stroke", "black");
 	
 	var circles =  svgContainer.selectAll("circle").
-						data(stations);
+						data(intercityStations);
 	
 	circles.enter()
 		.append("circle")
 		.style("fill", "red")
+		 .on("mouseover", function(d) {
+      var g = d3.select("#vis"); // The node
+      // The class is used to remove the additional text later
+      var info = g.append('text')
+         .classed('info', true)
+         .attr('x', 2 + linearScaleX(d.geo_lng) )
+         .attr('y', 2 + linearScaleY(d.geo_lat) )
+         .text(d.naam);
+  })
 	    .attr("cx", function(d){return linearScaleX(d.geo_lng);})
 	    .attr("cy", function(d){return linearScaleY(d.geo_lat);})
-	    .attr("r",radius);
+	    .attr("r",radius)
+	   .on("mouseout", function() {
+      // Remove the info text on mouse out.
+      d3.select("#vis").select('text.info').remove();
+  });
 	
 	
 }
