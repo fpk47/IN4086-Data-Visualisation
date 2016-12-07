@@ -46,8 +46,8 @@ function join(lookupTable, mainTable, lookupKey, mainKey, select) {
     return output;
 }
 
-var conns = d3.csv("http://localhost/IN4086Link/IN4086-Data-Visualisation/data/connections0.csv", function(dataConns) {
-	stats = d3.csv("http://localhost/IN4086Link/IN4086-Data-Visualisation/data/stations-nl-2016-02.csv", function(dataStats) {
+var conns = d3.csv("/IN4086-Data-Visualisation/data/connections0.csv", function(dataConns) {
+	stats = d3.csv("/IN4086-Data-Visualisation/data/stations-nl-2016-02.csv", function(dataStats) {
 		dataStats.forEach(function(d) {
 			d.geo_lat = +d.geo_lat;
 			d.geo_lng = +d.geo_lng;
