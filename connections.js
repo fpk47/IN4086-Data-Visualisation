@@ -30,7 +30,16 @@ function getMin(columns, data) {
 
 
 function myFunction(input){
-	alert(input.length);
+	//alert(input.length);
+	var svgContainer = d3.select("#infoContainer");
+	svgContainer.selectAll("p").remove();
+	svgContainer.selectAll("h4").remove();
+	
+	svgContainer.append("h4").text("Incidents: " + input.length);
+	input.forEach(function(d) {
+		var str = "Duration: " +d.DURATION + ", Cause: " + d.CAUSE;
+		svgContainer.append("p").text(str);
+	});
 }
 
 function join(lookupTable, mainTable, lookupKey, mainKey, isInner, select) {
@@ -186,7 +195,7 @@ function getJoinAndRender(stations, connections, map, dataInfo) {
 	//var diff = (maxX - minX) / (maxY - minY);
 	var width = diff * height;
 
-	var svgContainer = d3.select("#cContainer").append("svg")
+	var svgContainer = d3.select("#mapContainer").append("svg")
 										.attr("width", width)
 										.attr("height", height)
 										.attr("id", "vis");

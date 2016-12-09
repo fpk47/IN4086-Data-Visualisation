@@ -2,10 +2,24 @@ body {
     background:#F5F5F5;
 }
 div {
-    margin: 20px;
+    margin: 0px;
 }
 h1 {
     color: black;
     font-family:"Helvetica";
     font-size: 20px;
+}
+#container {
+	width: 100%;
+	overflow: hidden;
+	background: #FFFF00;
+}
+
+#mapContainer {
+	background: #0000FF;
+	float: left;
+}
+
+#infoContainer {
+	background: #FF0000;
 }
