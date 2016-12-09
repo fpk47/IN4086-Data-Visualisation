@@ -55,7 +55,7 @@ var conns = d3.csv("http://localhost/IN4086Link/IN4086-Data-Visualisation/data/c
 		
 		//getJoinAndRender(dataStats, dataConns);
 		
-		var m = d3.json("http://localhost/IN4086Link/IN4086-Data-Visualisation/data/mapNetherlands.json", function(map) {
+		var m = d3.json("http://localhost/IN4086Link/IN4086-Data-Visualisation/data/mapNetherlandsDetail.json", function(map) {
 			console.log(map);
 			
 			getJoinAndRender(dataStats, dataConns, map);
