@@ -47,18 +47,24 @@ function join(lookupTable, mainTable, lookupKey, mainKey, select) {
 }
 
 var conns = d3.csv("http://localhost/IN4086Link/IN4086-Data-Visualisation/data/connections0.csv", function(dataConns) {
-	stats = d3.csv("http://localhost/IN4086Link/IN4086-Data-Visualisation/data/stations-nl-2016-02.csv", function(dataStats) {
+	var stats = d3.csv("http://localhost/IN4086Link/IN4086-Data-Visualisation/data/stations-nl-2016-02.csv", function(dataStats) {
 		dataStats.forEach(function(d) {
 			d.geo_lat = +d.geo_lat;
 			d.geo_lng = +d.geo_lng;
 		});
 		
-		getJoinAndRender(dataStats, dataConns);
+		//getJoinAndRender(dataStats, dataConns);
+		
+		var m = d3.json("http://localhost/IN4086Link/IN4086-Data-Visualisation/data/mapNetherlands.json", function(map) {
+			console.log(map);
+			
+			getJoinAndRender(dataStats, dataConns, map);
+			//drawMap(map.coordinates);
+		});
 	});
 });
 
-
-function getJoinAndRender(stations, connections) {
+function getJoinAndRender(stations, connections, map) {
 	var resultIntermediate = join(stations, connections, "code", "s1", function(connection, station) {
 	    return {
 	        s1: connection.s1,
@@ -113,16 +119,34 @@ function getJoinAndRender(stations, connections) {
 										.attr("width", width)
 										.attr("height", height)
 										.attr("id", "vis");
-										
-	var lines = svgContainer.selectAll("line")
-					.data(resultFullClean);
+							
 	
+
 	var linearScaleX = d3.scaleLinear()
 						.domain([minX,maxX])
 						.range([radius,width-radius]);
 	var linearScaleY = d3.scaleLinear()
 						.domain([minY,maxY])
 						.range([height-radius,radius]);
+	
+	//var lineFunctions = [];
+	var lineFunction = d3.line()
+				.x(function(d) {return linearScaleX(+d[0]);})
+				.y(function(d) {return linearScaleY(+d[1]);});
+				//.interpolate("linear");
+	map.coordinates.forEach(function(polygon) {
+		svgContainer.append("path")
+					.attr("d", lineFunction(polygon))
+					.attr("stroke", "blue")
+					.attr("stroke-width", 2)
+					.attr("fill", "green");
+	});
+	
+	var lines = svgContainer.selectAll("line")
+					.data(resultFullClean);
+	
+	
+	//var svgContainer = d3.select("#vis");
 	
 	lines.enter()
 	    .append("line")
