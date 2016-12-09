@@ -71,15 +71,17 @@ var conns = d3.csv("data/connections0.csv", function(dataConns) {
 });
 
 function contains(array, object, keys) {
-	array.forEach(function(d) {
+	//var found = false;
+	for (var i = 0; i < array.length; i++) {
+	var d = array[i];
 		var res = true;
 		keys.forEach(function(key) {
-			res &= (d[key] == object[key]);
-		})
+			res &= (d[key] === object[key]);
+		});
 		if (res) {
 			return res;
 		}
-	});
+	}
 }
 
 function getJoinAndRender(stations, connections, map, dataInfo) {
@@ -106,12 +108,11 @@ function getJoinAndRender(stations, connections, map, dataInfo) {
 
 	var intercityStations = [];
 	stations.forEach(function(d) {
-		if ( d.type != "stoptreinstation" ){
+		//if ( d.type != "stoptreinstation" ){
 			intercityStations.push(d);
-		}
+		//}
 	});
 	
-	console.log(dataInfo);
 	var linesInfoMap = new Map();
 	var lookupTable = new Map();
 	stations.forEach(function(d) {
@@ -135,7 +136,9 @@ function getJoinAndRender(stations, connections, map, dataInfo) {
 				temp.sort();
 				var key = temp[0] + "-" + temp[1];
 				if (linesInfoMap.get(key) == null) {
-					linesInfoMap.set(key, res);
+					if (contains(connections, res, ["s1", "s2"])) {
+						linesInfoMap.set(key, res);
+					}
 				}
 			}
 			prev = statNew;
@@ -148,10 +151,8 @@ function getJoinAndRender(stations, connections, map, dataInfo) {
 		linesInfo.push(linesInfoMap.get(key));
 		key = itter.next().value;
 	}
-	console.log(linesInfo);
-	console.log(resultFull.length);
-	resultFull = linesInfo.concat(resultFull);
-	console.log(resultFull.length);
+	
+	resultFull = resultFull.concat(linesInfo);
 	
 	var radius = 2;
 	var height = 900;
