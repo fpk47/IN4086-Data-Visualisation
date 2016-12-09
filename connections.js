@@ -29,8 +29,8 @@ function getMin(columns, data) {
 }
 
 
-function myFunction(){
-	alert("hallo!");
+function myFunction(input){
+	alert(input.length);
 }
 
 function join(lookupTable, mainTable, lookupKey, mainKey, isInner, select) {
@@ -102,17 +102,19 @@ function getJoinAndRender(stations, connections, map, dataInfo) {
 	        s1_lng: connection.s1_lng,
 	        s2_lat: (station !== undefined) ? station.geo_lat : null,
 	        s2_lng: (station !== undefined) ? station.geo_lng : null,
-	        color: "black"
+	        color: "black",
+	        disruptions: []
 	    };
 	});
 
 	var intercityStations = [];
 	stations.forEach(function(d) {
-		//if ( d.type != "stoptreinstation" ){
+		if ( d.type != "stoptreinstation" ){
 			intercityStations.push(d);
-		//}
+		}
 	});
 	
+	var incidentCounterMax = 1;
 	var linesInfoMap = new Map();
 	var lookupTable = new Map();
 	stations.forEach(function(d) {
@@ -130,14 +132,21 @@ function getJoinAndRender(stations, connections, map, dataInfo) {
 					s1_lng: prev.geo_lng,
 					s2_lat: statNew.geo_lat,
 					s2_lng: statNew.geo_lng,
-					color: "aquamarine"
+					color: "aquamarine",
+					disruptions: [d]
 				};
 				var temp = [prev.code, statNew.code];
 				temp.sort();
 				var key = temp[0] + "-" + temp[1];
-				if (linesInfoMap.get(key) == null) {
-					if (contains(connections, res, ["s1", "s2"])) {
+				if (contains(connections, res, ["s1", "s2"])) {
+					if (linesInfoMap.get(key) == null) {
 						linesInfoMap.set(key, res);
+					}
+					else {
+						var entry = linesInfoMap.get(key);
+						entry.disruptions = entry.disruptions.concat([d]);
+						linesInfoMap.set(key, entry);
+						incidentCounterMax = Math.max(incidentCounterMax, entry.disruptions.length);
 					}
 				}
 			}
@@ -191,6 +200,10 @@ function getJoinAndRender(stations, connections, map, dataInfo) {
 						.domain([minY,maxY])
 						.range([height-radius,radius]);
 	
+	var linearScaleDisruptions = d3.scaleLinear()
+						.domain([0, incidentCounterMax])
+						.range([1, 12]);
+	
 	//var lineFunctions = [];
 	var lineFunction = d3.line()
 				.x(function(d) {return linearScaleX(+d[0]);})
@@ -209,12 +222,12 @@ function getJoinAndRender(stations, connections, map, dataInfo) {
 	
 	lines.enter()
 	    .append("line")
-	    .on("click", function(d){ return myFunction();})
+	    .on("click", function(d){ return myFunction(d.disruptions);})
 	    .attr("x1", function(d){ return linearScaleX(d.s1_lng);})
 		.attr("y1", function(d){ return linearScaleY(d.s1_lat);})
 		.attr("x2", function(d){ return linearScaleX(d.s2_lng);})
 		.attr("y2", function(d){ return linearScaleY(d.s2_lat);})
-		.attr("stroke-width", 2)
+		.attr("stroke-width", function(d) {return linearScaleDisruptions(d.disruptions.length);})
 		.attr("stroke", function(d){ return d.color;});
 	
 	var circles =  svgContainer.selectAll("circle").
