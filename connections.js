@@ -33,7 +33,7 @@ function myFunction(){
 	alert("hallo!");
 }
 
-function join(lookupTable, mainTable, lookupKey, mainKey, select) {
+function join(lookupTable, mainTable, lookupKey, mainKey, isInner, select) {
     var l = lookupTable.length,
         m = mainTable.length,
         lookupIndex = new Map(),
@@ -45,7 +45,9 @@ function join(lookupTable, mainTable, lookupKey, mainKey, select) {
     for (var j = 0; j < m; j++) { // loop through m items
         var y = mainTable[j];
         var x = lookupIndex.get(y[mainKey]); // get corresponding row from lookupTable
-        output.push(select(y, x)); // select only the columns you need
+        if (!isInner || x != null) {
+        	output.push(select(y, x)); // select only the columns you need
+        }
     }
     return output;
 }
@@ -60,16 +62,28 @@ var conns = d3.csv("data/connections0.csv", function(dataConns) {
 		//getJoinAndRender(dataStats, dataConns);
 		
 		var m = d3.json("data/mapNetherlandsDetail.json", function(map) {
-			console.log(map);
 			
-			getJoinAndRender(dataStats, dataConns, map);
-			//drawMap(map.coordinates);
+			var info = d3.csv("data/filteredData.csv", function(dataInfo) {
+				getJoinAndRender(dataStats, dataConns, map, dataInfo);
+			});
 		});
 	});
 });
 
-function getJoinAndRender(stations, connections, map) {
-	var resultIntermediate = join(stations, connections, "code", "s1", function(connection, station) {
+function contains(array, object, keys) {
+	array.forEach(function(d) {
+		var res = true;
+		keys.forEach(function(key) {
+			res &= (d[key] == object[key]);
+		})
+		if (res) {
+			return res;
+		}
+	});
+}
+
+function getJoinAndRender(stations, connections, map, dataInfo) {
+	var resultIntermediate = join(stations, connections, "code", "s1", true, function(connection, station) {
 	    return {
 	        s1: connection.s1,
 	        s2: connection.s2,
@@ -78,22 +92,16 @@ function getJoinAndRender(stations, connections, map) {
 	    };
 	});
 	
-	var resultFull = join(stations, resultIntermediate, "code", "s2", function(connection, station) {
+	var resultFull = join(stations, resultIntermediate, "code", "s2", true, function(connection, station) {
 	    return {
 	        s1: connection.s1,
 	        s2: connection.s2,
 	        s1_lat: connection.s1_lat,
 	        s1_lng: connection.s1_lng,
 	        s2_lat: (station !== undefined) ? station.geo_lat : null,
-	        s2_lng: (station !== undefined) ? station.geo_lng : null
+	        s2_lng: (station !== undefined) ? station.geo_lng : null,
+	        color: "black"
 	    };
-	});
-	
-	var resultFullClean = [];
-	resultFull.forEach(function(d) {
-		if (d.s1_lat != null && d.s1_lng != null && d.s2_lat != null && d.s2_lng != null) {
-			resultFullClean.push(d);
-		}
 	});
 
 	var intercityStations = [];
@@ -103,6 +111,48 @@ function getJoinAndRender(stations, connections, map) {
 		}
 	});
 	
+	console.log(dataInfo);
+	var linesInfoMap = new Map();
+	var lookupTable = new Map();
+	stations.forEach(function(d) {
+		lookupTable.set(d.code, d);
+	});
+	dataInfo.forEach(function(d) {
+		var prev = null;
+		d.ROUTE.split(";").forEach(function(station) {
+			var statNew = lookupTable.get(station);
+			if (prev != null && statNew != null) {
+				var res = {
+					s1: prev.code,
+					s2: statNew.code,
+					s1_lat: prev.geo_lat,
+					s1_lng: prev.geo_lng,
+					s2_lat: statNew.geo_lat,
+					s2_lng: statNew.geo_lng,
+					color: "aquamarine"
+				};
+				var temp = [prev.code, statNew.code];
+				temp.sort();
+				var key = temp[0] + "-" + temp[1];
+				if (linesInfoMap.get(key) == null) {
+					linesInfoMap.set(key, res);
+				}
+			}
+			prev = statNew;
+		});
+	});
+	var linesInfo = [];
+	var itter = linesInfoMap.keys()
+	var key = itter.next().value;
+	while (key != null) {
+		linesInfo.push(linesInfoMap.get(key));
+		key = itter.next().value;
+	}
+	console.log(linesInfo);
+	console.log(resultFull.length);
+	resultFull = linesInfo.concat(resultFull);
+	console.log(resultFull.length);
+	
 	var radius = 2;
 	var height = 900;
 
@@ -110,7 +160,7 @@ function getJoinAndRender(stations, connections, map) {
 	var minX = 99999999;
 	var maxY = 0;
 	var minY = 99999999;
-	resultFullClean.forEach(function(d) {
+	resultFull.forEach(function(d) {
 	    var z = d;
 	    maxX = Math.max(maxX, z.s1_lng);
 	    maxX = Math.max(maxX, z.s2_lng);
@@ -154,10 +204,7 @@ function getJoinAndRender(stations, connections, map) {
 	});
 	
 	var lines = svgContainer.selectAll("line")
-					.data(resultFullClean);
-	
-	
-	//var svgContainer = d3.select("#vis");
+					.data(resultFull);
 	
 	lines.enter()
 	    .append("line")
@@ -167,7 +214,7 @@ function getJoinAndRender(stations, connections, map) {
 		.attr("x2", function(d){ return linearScaleX(d.s2_lng);})
 		.attr("y2", function(d){ return linearScaleY(d.s2_lat);})
 		.attr("stroke-width", 2)
-		.attr("stroke", "black");
+		.attr("stroke", function(d){ return d.color;});
 	
 	var circles =  svgContainer.selectAll("circle").
 						data(intercityStations);
@@ -191,6 +238,4 @@ function getJoinAndRender(stations, connections, map) {
       // Remove the info text on mouse out.
       d3.select("#vis").select('text.info').remove();
   });
-	
-	
 }
