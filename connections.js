@@ -233,27 +233,29 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 						.domain([0, incidentCounterMax])
 						.range([3, 12]);
 	
-	//var lineFunctions = [];
 	var lineFunction = d3.svg.line()
 				.x(function(d) {return linearScaleX(+d[0]);})
 				.y(function(d) {return linearScaleY(+d[1]);});
-				//.interpolate("linear");
+
+	var mapLinesContainer = svgContainer.append("g");
 	map.coordinates.forEach(function(polygon) {
-		svgContainer.append("path")
+		mapLinesContainer.append("path")
 					.attr("d", lineFunction(polygon))
 					.attr("stroke", "black")
 					.attr("stroke-width", 0.5)
 					.attr("fill", "rgb(137,194,105)");
 	});
 	meer.coordinates.forEach(function(polygon) {
-		svgContainer.append("path")
+		mapLinesContainer.append("path")
 					.attr("d", lineFunction(polygon))
 					.attr("stroke", "black")
 					.attr("stroke-width", 0.5)
 					.attr("fill", "rgb(140,206,206)");
 	});
 	
-	var lines = svgContainer.selectAll("line")
+	var lines = svgContainer
+					.append("g")
+					.selectAll("line")
 					.data(resultFull);
 	strokeWidth = 4;
 	lines.enter()
@@ -267,40 +269,70 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 		.attr("stroke-width", strokeWidth)
 		.attr("stroke", function(d){ return colorScale(d.disruptions.length);});
 	
-	var circles =  svgContainer.selectAll("circle").
-						data(intercityStations);
+	var circles =  svgContainer
+						.append("g")
+						.selectAll("circle")
+						.data(intercityStations);
 	
 	circles.enter()
 		.append("circle")
 		.style("fill", function(d) {
 			return d.type != "stoptreinstation" ? "black" : "white";
 		})
-		 .on("mouseover", function(d) {
+		.on("mouseover", function(d) {
 		      var g = d3.select("#vis").select("g"); // The node
 		      // The class is used to remove the additional text later
 		      var info = g.append('text')
-         .classed('info', true)
-         .attr('x', 2 + linearScaleX(d.geo_lng) )
-         .attr('y', 2 + linearScaleY(d.geo_lat) )
-         .text(d.naam);
-  })
+	         .classed('info', true)
+	         .attr('x', 2 + linearScaleX(d.geo_lng) )
+	         .attr('y', 2 + linearScaleY(d.geo_lat) )
+	         .text(d.naam);
+		 })
 	    .attr("cx", function(d){return linearScaleX(d.geo_lng);})
 	    .attr("cy", function(d){return linearScaleY(d.geo_lat);})
 	    .attr("r",radius)
-	   .on("mouseout", function() {
-      // Remove the info text on mouse out.
-      d3.select("#vis").select('text.info').remove();
-  });
+	    .on("mouseout", function() {
+			// Remove the info text on mouse out.
+			d3.select("#vis").select('text.info').remove();
+	    });
+	
+	var buttonContainer = d3.select("#vis")
+							.append("g")
+							.attr("class", "button")
+							.attr("transform", "translate(" + 50 + "," + 30 + ")");
+	var buttonText = buttonContainer
+							.append("text")
+							.text("Reset\nMap");
+
+	var btn = button()
+		.container(buttonContainer)
+		.text(buttonText)
+		.count(0)
+		.cb(resetMap)();
 }
 
-function zoomed(){
-	svgContainer.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-/*	svgContainer.selectAll("circle").forEach(function (d) {
-		d.attr("r", 2 / d3.event.scale);
-	});*/
+function zoomed() {
+	/*svgContainer.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+
 	svgContainer.selectAll("circle").attr("r", radius / d3.event.scale);
 	svgContainer.selectAll("line").attr("stroke-width", function(d) {
-		//return linearScaleDisruptions(d.disruptions.length)/ d3.event.scale;
 		return strokeWidth / d3.event.scale;
-	});
+	});*/
+	setTranslateScale(d3.event.translate, d3.event.scale);
+}
+
+function setTranslateScale(translate, scale) {
+	svgContainer.attr("transform", "translate(" + translate + ")scale(" + scale + ")");
+	/*	svgContainer.selectAll("circle").forEach(function (d) {
+			d.attr("r", 2 / d3.event.scale);
+		});*/
+		svgContainer.selectAll("circle").attr("r", radius / scale);
+		svgContainer.selectAll("line").attr("stroke-width", function(d) {
+			//return linearScaleDisruptions(d.disruptions.length)/ d3.event.scale;
+			return strokeWidth / scale;
+		});
+}
+
+function resetMap() {
+	setTranslateScale("0,0", "1");
 }

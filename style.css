@@ -27,3 +27,7 @@ h1 {
 	background: #FF0000;
 	float: left;
 }
+
+#resetButton {
+	float: left;
+}
