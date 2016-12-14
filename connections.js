@@ -255,7 +255,7 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 	
 	var lines = svgContainer.selectAll("line")
 					.data(resultFull);
-	
+	strokeWidth = 4;
 	lines.enter()
 	    .append("line")
 	    .on("click", function(d){ return myFunction(d.disruptions);})
@@ -263,7 +263,8 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 		.attr("y1", function(d){ return linearScaleY(d.s1_lat);})
 		.attr("x2", function(d){ return linearScaleX(d.s2_lng);})
 		.attr("y2", function(d){ return linearScaleY(d.s2_lat);})
-		.attr("stroke-width", function(d) {return linearScaleDisruptions(d.disruptions.length);})
+		//.attr("stroke-width", function(d) {return linearScaleDisruptions(d.disruptions.length);})
+		.attr("stroke-width", strokeWidth)
 		.attr("stroke", function(d){ return colorScale(d.disruptions.length);});
 	
 	var circles =  svgContainer.selectAll("circle").
@@ -275,7 +276,7 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 			return d.type != "stoptreinstation" ? "black" : "white";
 		})
 		 .on("mouseover", function(d) {
-		      var g = d3.select("#vis"); // The node
+		      var g = d3.select("#vis").select("g"); // The node
 		      // The class is used to remove the additional text later
 		      var info = g.append('text')
          .classed('info', true)
@@ -299,6 +300,7 @@ function zoomed(){
 	});*/
 	svgContainer.selectAll("circle").attr("r", radius / d3.event.scale);
 	svgContainer.selectAll("line").attr("stroke-width", function(d) {
-		return linearScaleDisruptions(d.disruptions.length)/ d3.event.scale;
+		//return linearScaleDisruptions(d.disruptions.length)/ d3.event.scale;
+		return strokeWidth / d3.event.scale;
 	});
 }
