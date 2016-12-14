@@ -17,9 +17,7 @@ h1 {
 }
 
 #mapContainer {
-	width: 75%;
-	overflow: hidden;
-	background: #0000FF;
+	background: rgb(140,206,206);
 	float: left;
 }
 
