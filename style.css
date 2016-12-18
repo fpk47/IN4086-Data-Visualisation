@@ -1,5 +1,6 @@
 body {
     background:#F5F5F5;
+    font-family: 'Arial';
 }
 div {
     margin: 0px;
@@ -21,18 +22,22 @@ canvas {
 #container {
 	width: 100%;
 	overflow: hidden;
-	align: center;
+	text-align: center;
 }
 
 #mapContainer {
-	width: 75%;
+	width: 70%;
 	overflow: hidden;
+	background: rgb(140,206,206);
 	float: left;
 }
 
 #infoContainer {
-	width: 100%;
+	width: 30%;
 	overflow: hidden;
 	float: left;
-	font-family: 'Arial';
+}
+
+#resetButton {
+	float: left;
 }

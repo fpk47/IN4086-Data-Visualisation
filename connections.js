@@ -68,14 +68,11 @@ var conns = d3.csv("data/connections0.csv", function(dataConns) {
 			d.geo_lng = +d.geo_lng;
 		});
 		
-		//getJoinAndRender(dataStats, dataConns);
-			timeSlider();
-	
-		
 		var m = d3.json("data/mapNetherlandsDetail.json", function(map) {
-			
-			var info = d3.csv("data/filteredData.csv", function(dataInfo) {
-				getJoinAndRender(dataStats, dataConns, map, dataInfo);
+			var m2 = d3.json("data/ijsselmeer.json", function(meer) {
+				var info = d3.csv("data/filteredData.csv", function(dataInfo) {
+					getJoinAndRender(dataStats, dataConns, map, meer, dataInfo);
+				});
 			});
 		});
 	});
@@ -95,7 +92,7 @@ function contains(array, object, keys) {
 	}
 }
 
-function getJoinAndRender(stations, connections, map, dataInfo) {
+function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 	var resultIntermediate = join(stations, connections, "code", "s1", true, function(connection, station) {
 	    return {
 	        s1: connection.s1,
@@ -174,14 +171,14 @@ function getJoinAndRender(stations, connections, map, dataInfo) {
 	
 	resultFull = resultFull.concat(linesInfo);
 	
-	var radius = 2;
-	var height = 900;
+	radius = 5;
+	var height = 800;
 
 	var maxX = 0;
 	var minX = 99999999;
 	var maxY = 0;
 	var minY = 99999999;
-	resultFull.forEach(function(d) {
+	/*resultFull.forEach(function(d) {
 	    var z = d;
 	    maxX = Math.max(maxX, z.s1_lng);
 	    maxX = Math.max(maxX, z.s2_lng);
@@ -191,46 +188,74 @@ function getJoinAndRender(stations, connections, map, dataInfo) {
 	    maxY = Math.max(maxY, z.s2_lat);
 	    minY = Math.min(minY, z.s1_lat);
 	    minY = Math.min(minY, z.s2_lat);
+	});*/
+	map.coordinates.forEach(function(parts) {
+		parts.forEach(function(d) {
+			maxX = Math.max(maxX, d[0]);
+			minX = Math.min(minX, d[0]);
+			maxY = Math.max(maxY, d[1]);
+			minY = Math.min(minY, d[1]);
+		});
 	});
 
 	var diff = (maxY - minY) / (maxX - minX);
 	//var diff = (maxX - minX) / (maxY - minY);
 	var width = diff * height;
 
-	var svgContainer = d3.select("#mapContainer").append("svg")
+	var zoom = d3.behavior.zoom()
+    .translate([0, 0])
+    .scale(1)
+    .scaleExtent([1, 14])
+    .on("zoom", zoomed);
+	
+	svgContainer = d3.select("#mapContainer").append("svg")
 										.attr("width", width)
 										.attr("height", height)
-										.attr("id", "vis");
-							
+										.attr("id", "vis")
+										.call(zoom)
+											.append("g");
 	
 
-	var linearScaleX = d3.scaleLinear()
+	var linearScaleX = d3.scale.linear()
 						.domain([minX,maxX])
 						.range([radius,width-radius]);
-	var linearScaleY = d3.scaleLinear()
+	var linearScaleY = d3.scale.linear()
 						.domain([minY,maxY])
 						.range([height-radius,radius]);
 	
-	var linearScaleDisruptions = d3.scaleLinear()
-						.domain([0, incidentCounterMax])
-						.range([1, 12]);
+	var colorScale = d3.scale.linear()
+						.domain([0,incidentCounterMax])
+						.range(["grey","#FF0000"]);
 	
-	//var lineFunctions = [];
-	var lineFunction = d3.line()
+	linearScaleDisruptions = d3.scale.linear()
+						.domain([0, incidentCounterMax])
+						.range([3, 12]);
+	
+	var lineFunction = d3.svg.line()
 				.x(function(d) {return linearScaleX(+d[0]);})
 				.y(function(d) {return linearScaleY(+d[1]);});
-				//.interpolate("linear");
+
+	var mapLinesContainer = svgContainer.append("g");
 	map.coordinates.forEach(function(polygon) {
-		svgContainer.append("path")
+		mapLinesContainer.append("path")
 					.attr("d", lineFunction(polygon))
-					.attr("stroke", "blue")
-					.attr("stroke-width", 2)
-					.attr("fill", "green");
+					.attr("stroke", "black")
+					.attr("stroke-width", 0.5)
+					.attr("fill", "rgb(137,194,105)");
+	});
+	meer.coordinates.forEach(function(polygon) {
+		mapLinesContainer.append("path")
+					.attr("d", lineFunction(polygon))
+					.attr("stroke", "black")
+					.attr("stroke-width", 0.5)
+					.attr("fill", "rgb(140,206,206)");
 	});
 	
-	var lines = svgContainer.selectAll("line")
+	var lines = svgContainer
+					.append("g")
+					.selectAll("line")
 					.data(resultFull);
-	
+	strokeWidth = 4;
 	lines.enter()
 	    .append("line")
 	    .on("click", function(d){ return myFunction(d.disruptions);})
@@ -238,29 +263,74 @@ function getJoinAndRender(stations, connections, map, dataInfo) {
 		.attr("y1", function(d){ return linearScaleY(d.s1_lat);})
 		.attr("x2", function(d){ return linearScaleX(d.s2_lng);})
 		.attr("y2", function(d){ return linearScaleY(d.s2_lat);})
-		.attr("stroke-width", function(d) {return linearScaleDisruptions(d.disruptions.length);})
-		.attr("stroke", function(d){ return d.color;});
+		//.attr("stroke-width", function(d) {return linearScaleDisruptions(d.disruptions.length);})
+		.attr("stroke-width", strokeWidth)
+		.attr("stroke", function(d){ return colorScale(d.disruptions.length);});
 	
-	var circles =  svgContainer.selectAll("circle").
-						data(intercityStations);
+	var circles =  svgContainer
+						.append("g")
+						.selectAll("circle")
+						.data(intercityStations);
 	
 	circles.enter()
 		.append("circle")
-		.style("fill", "red")
-		 .on("mouseover", function(d) {
-      var g = d3.select("#vis"); // The node
-      // The class is used to remove the additional text later
-      var info = g.append('text')
-         .classed('info', true)
-         .attr('x', 2 + linearScaleX(d.geo_lng) )
-         .attr('y', 2 + linearScaleY(d.geo_lat) )
-         .text(d.naam);
-  })
+		.style("fill", function(d) {
+			return d.type != "stoptreinstation" ? "black" : "white";
+		})
+		.on("mouseover", function(d) {
+		      var g = d3.select("#vis").select("g"); // The node
+		      // The class is used to remove the additional text later
+		      var info = g.append('text')
+	         .classed('info', true)
+	         .attr('x', 2 + linearScaleX(d.geo_lng) )
+	         .attr('y', 2 + linearScaleY(d.geo_lat) )
+	         .text(d.naam);
+		 })
 	    .attr("cx", function(d){return linearScaleX(d.geo_lng);})
 	    .attr("cy", function(d){return linearScaleY(d.geo_lat);})
 	    .attr("r",radius)
-	   .on("mouseout", function() {
-      // Remove the info text on mouse out.
-      d3.select("#vis").select('text.info').remove();
-  });
+	    .on("mouseout", function() {
+			// Remove the info text on mouse out.
+			d3.select("#vis").select('text.info').remove();
+	    });
+	
+	var buttonContainer = d3.select("#vis")
+							.append("g")
+							.attr("class", "button")
+							.attr("transform", "translate(" + 50 + "," + 30 + ")");
+	var buttonText = buttonContainer
+							.append("text")
+							.text("Reset\nMap");
+
+	var btn = button()
+		.container(buttonContainer)
+		.text(buttonText)
+		.count(0)
+		.cb(resetMap)();
+}
+
+function zoomed() {
+	/*svgContainer.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+
+	svgContainer.selectAll("circle").attr("r", radius / d3.event.scale);
+	svgContainer.selectAll("line").attr("stroke-width", function(d) {
+		return strokeWidth / d3.event.scale;
+	});*/
+	setTranslateScale(d3.event.translate, d3.event.scale);
+}
+
+function setTranslateScale(translate, scale) {
+	svgContainer.attr("transform", "translate(" + translate + ")scale(" + scale + ")");
+	/*	svgContainer.selectAll("circle").forEach(function (d) {
+			d.attr("r", 2 / d3.event.scale);
+		});*/
+		svgContainer.selectAll("circle").attr("r", radius / scale);
+		svgContainer.selectAll("line").attr("stroke-width", function(d) {
+			//return linearScaleDisruptions(d.disruptions.length)/ d3.event.scale;
+			return strokeWidth / scale;
+		});
+}
+
+function resetMap() {
+	setTranslateScale("0,0", "1");
 }
