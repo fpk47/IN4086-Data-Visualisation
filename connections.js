@@ -69,6 +69,8 @@ var conns = d3.csv("data/connections0.csv", function(dataConns) {
 		});
 		
 		//getJoinAndRender(dataStats, dataConns);
+			timeSlider();
+	
 		
 		var m = d3.json("data/mapNetherlandsDetail.json", function(map) {
 			

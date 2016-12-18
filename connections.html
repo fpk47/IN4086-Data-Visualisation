@@ -4,22 +4,49 @@
 <meta charset="ISO-8859-1">
 <title>Treinstoringen Nederland</title>
 <link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="d3.slider.css" />  
-<script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="https://d3js.org/d3.v3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.4/Chart.min.js"></script>
+
+<link rel="stylesheet" href="lib/nouislider.css">
+<link rel="stylesheet" href="lib/nouislider.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script src="lib/nouislider.js"></script>
+<script src="lib/nouislider.min.js"></script>
+
 </head>
 <body>
 
 <div id="container" >
-	<div id="mapContainer" ></div>
-	<div id="infoContainer">
-		<h3>Information</h3>
+	<!--<div id="mapContainer" ></div>-->
+	<div id="infoContainer"">
+		<h2 style="text-align: center">Select Time Period</h2>
 
-		<h2>Default slidner</h2>
-	    <div id="slider"></div>
+		<div id="timeSliderArea">
+			<div style="float: left; width: 20%; text-align: center"> 2011 </div>
+			<div style="float: left; width: 60%" id= "slider1"></div>
+			<div style="float: left; width: 20%; text-align: center"> 2016 </div>
+		</div>
+		<div style="float: left" id="sliderValueStart"></div>
+		<div style="float: right" id="sliderValueEnd"></div>
 	</div>
+
+	<div>
+		<button onclick="reloadPieChartData()">Reload Pie Chart</button>
+		<button onclick="reloadBarChartData()">Reload Bar Chart</button>
+	</div>
+
+	<div>
+		<button onclick="changePieChartData()">Change and Reload Pie Data</button>
+		<button onclick="changeBarChartData()">Change and Reload Bar Data</button>
+	</div>
+
+	<canvas style="float: center" id="myPieChart"></canvas>
+	<canvas style="float: center" id="myBarChart"></canvas>
 </div>
 
-<script src="connections.js"></script>
-<script src="customSlider.js"></script>
+<script src="lib/timeSlider.js"></script>
+<script src="lib/pieChart.js"></script>
+<script src="lib/barChart.js"></script>
+<!--<script src="connections.js"></script>-->
 </body>
 </html>
