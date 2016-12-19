@@ -19,12 +19,10 @@ function button() {
       rect = null;
 
   function my() {
-	  console.log("my called");
     // set defaults
     g = container || d3.select('svg').append('g')
         .attr('class', 'button')
         .attr('transform', 'translate(' + [width / 2, height / 2] + ")");
-    console.log(g);
     text = text || g.append('text').text('Hello, world!');
 
     defs = g.append('defs');
