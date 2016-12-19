@@ -39,11 +39,14 @@ display: block;
 
 #infoContainer {
 	margin-left: 10px;
-	flex-grow: 1;
 	display: flex;
 	flex-direction: column;
 }
 
 #charts {
+	flex-grow: 1;
+}
+
+#myBarChart {
 	flex-grow: 1;
 }
