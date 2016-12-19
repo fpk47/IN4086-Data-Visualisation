@@ -34,12 +34,14 @@ function myFunction(input){
 	var svgContainer = d3.select("#infoContainer");
 	svgContainer.selectAll("p").remove();
 	svgContainer.selectAll("h4").remove();
-	
+
+	updatePieCharts( input );
+	/*
 	svgContainer.append("h4").text("Incidents: " + input.length);
 	input.forEach(function(d) {
 		var str = "Duration: " +d.DURATION + ", Cause: " + d.CAUSE;
 		svgContainer.append("p").text(str);
-	});
+	});*/
 }
 
 function join(lookupTable, mainTable, lookupKey, mainKey, isInner, select) {
