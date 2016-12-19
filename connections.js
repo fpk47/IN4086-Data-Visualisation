@@ -340,27 +340,42 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 							.x(function(d) {return linearScaleX(+d[0]);})
 							.y(function(d) {return linearScaleY(+d[1]);})
 							.interpolate("step-before");
-
+	prevSelected = null;
 	var lines = svgContainer
 					.append("g")
+					.attr("id", "tracks")
 					.selectAll("path")
 					.data(topViewLines);
 	lines.enter()
 		.append("path")
 		.attr("d", function(d) { return lineFunction(d.coordinates); })
-		.on("click", function(d){ return myFunction(d.disruptions);})
+		.on("click", function(d) {
+			if (prevSelected != null) {
+				prevSelected.transition()
+					.duration(200)
+					.attr("stroke",function(d) { return colorScaleTopView(d.disruptions.length); });
+				prevSelected.attr("class", "");
+			}
+			d3.select(this).attr("stroke", "orange").attr("class", "selected");
+			prevSelected = d3.select(this);
+			
+			return myFunction(d.disruptions);
+		})
 		.on("mouseover", function(d) {
 			d3.select(this).transition().duration(500).attr("stroke", "orange");
 		})
 		.on("mouseout", function(d) {
-			d3.select(this).transition()
-						.duration(200)
-						.attr("stroke",function(d) { return colorScaleTopView(d.disruptions.length); });
+			if (d3.select(this).attr("class") != "selected") {
+				d3.select(this).transition()
+							.duration(200)
+							.attr("stroke",function(d) { 
+								return colorScaleTopView(d.disruptions.length);
+							});
+			}
 		})
 		.attr("stroke", function(d) { return colorScaleTopView(d.disruptions.length); })
 		.attr("stroke-width", strokeWidth)
 		.attr("fill", "none");
-	//});
 	
 	/*var lines = svgContainer
 					.append("g")
@@ -438,7 +453,7 @@ function zoomed() {
 function setTranslateScale(translate, scale) {
 	svgContainer.attr("transform", "translate(" + translate + ")scale(" + scale + ")");
 	svgContainer.selectAll("circle").attr("r", radius / scale);
-	svgContainer.selectAll("line").attr("stroke-width", function(d) {
+	svgContainer.select("#tracks").selectAll("path").attr("stroke-width", function(d) {
 		return strokeWidth / scale;
 	});
 }
@@ -448,7 +463,7 @@ function resetMap() {
 	zoom.translate([0, 0]);
 	svgContainer.transition().duration(500).attr('transform', 'translate(' + zoom.translate() + ') scale(' + zoom.scale() + ')')
 	svgContainer.selectAll("circle").attr("r", radius);
-	svgContainer.selectAll("line").attr("stroke-width", function(d) {
+	svgContainer.select("#tracks").selectAll("path").attr("stroke-width", function(d) {
 		return strokeWidth;
 	});
 }
