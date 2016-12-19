@@ -5,6 +5,7 @@
 	<title>Treinstoringen Nederland</title>
 	<link rel="stylesheet" href="style.css">
 	<link rel="stylesheet" href="button.css" />
+	<link rel="stylesheet" href="slideButton.css" />
 	<script src="https://d3js.org/d3.v3.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.4/Chart.min.js"></script>
 
@@ -35,7 +36,13 @@
 			<canvas id="amountPieChart"></canvas>
 			<canvas id="durationPieChart"></canvas>
 		</div>
-		<canvas id="myBarChart"></canvas>
+		<div style="display: inline; width: 100%; float: left" class="radio">
+			<input id="male" type="radio" name="gender" value="male">
+			<label for="male">Show Weekdays</label>
+			<input id="female" type="radio" name="gender" value="female">
+			<label for="female">Show Months</label>
+		</div>
+		<canvas style="float: center" id="myBarChart"></canvas>
 	</div>
 </div>
 
