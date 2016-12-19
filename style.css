@@ -22,7 +22,7 @@ display: block;
 
 #amountPieChart{
 	max-width: 50%;
-	max-height: 800px;
+	max-height: 400px;
 	float: left;
 	overflow: auto;
 }
