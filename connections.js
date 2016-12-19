@@ -63,16 +63,39 @@ function join(lookupTable, mainTable, lookupKey, mainKey, isInner, select) {
     return output;
 }
 
+function objectEquals(obj1, obj2) {
+	var res = true;
+	Object.keys(obj1).forEach(function (key) {
+		res &= obj1[key] === obj2[key];
+	});
+	return res;
+}
+
 var conns = d3.csv("data/connections0.csv", function(dataConns) {
+	// Add connection Den Haag HS - Den Haag NOI, it does not adhere to triangle inequality
+	dataConns.push({s1:"gv",s2:"laa"});
+	// Remove connection Rotterdam Centraal - Roosendaal, it does not adhere to triangle inequality
+	var target = {s1:"rsd",s2:"rtd"};
+	for (var i = 0; i < dataConns.length; i++) {
+		if (objectEquals(target, dataConns[i])) {
+			dataConns.splice(i, 1);
+			break;
+		}
+	}
+	
 	var stats = d3.csv("data/stations-nl-2016-02.csv", function(dataStats) {
 		dataStats.forEach(function(d) {
 			d.geo_lat = +d.geo_lat;
 			d.geo_lng = +d.geo_lng;
 		});
-		
 		var m = d3.json("data/mapNetherlandsDetail.json", function(map) {
 			var m2 = d3.json("data/ijsselmeer.json", function(meer) {
 				var info = d3.csv("data/filteredData.csv", function(dataInfo) {
+					dataInfo.forEach(function(d) {
+						d.START_DATE = parseDate(d.START_DATE);
+						d.PRED_END_DATE = parseDate(d.PRED_END_DATE);
+						d.REAL_END_DATE = parseDate(d.REAL_END_DATE);
+					});
 					getJoinAndRender(dataStats, dataConns, map, meer, dataInfo);
 				});
 			});
@@ -82,6 +105,7 @@ var conns = d3.csv("data/connections0.csv", function(dataConns) {
 
 function contains(array, object, keys) {
 	//var found = false;
+	if (object. s1 )
 	for (var i = 0; i < array.length; i++) {
 	var d = array[i];
 		var res = true;
@@ -92,6 +116,7 @@ function contains(array, object, keys) {
 			return res;
 		}
 	}
+	return false;
 }
 
 function getJoinAndRender(stations, connections, map, meer, dataInfo) {
@@ -100,7 +125,8 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 	        s1: connection.s1,
 	        s2: connection.s2,
 	        s1_lat: (station !== undefined) ? station.geo_lat : null,
-	        s1_lng: (station !== undefined) ? station.geo_lng : null
+	        s1_lng: (station !== undefined) ? station.geo_lng : null,
+    		disruptions: []
 	    };
 	});
 	
@@ -117,12 +143,52 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 	    };
 	});
 
+	// Make a selection of stations without 'stoptrein' stations
 	var intercityStations = [];
 	stations.forEach(function(d) {
 		if ( d.type != "stoptreinstation" ){
 			intercityStations.push(d);
 		}
 	});
+	// Select end points of lines
+	var endStations = [];
+	var endpointCounter = new Map();
+	resultFull.forEach(function(conn) {
+		if (endpointCounter.get(conn.s1) != null) {
+			var entry = endpointCounter.get(conn.s1);
+			entry++;
+			endpointCounter.set(conn.s1, entry);
+		}
+		else {
+			endpointCounter.set(conn.s1, 1);
+		}
+		if (endpointCounter.get(conn.s2) != null) {
+			var entry = endpointCounter.get(conn.s2);
+			entry++;
+			endpointCounter.set(conn.s2, entry);
+		}
+		else {
+			endpointCounter.set(conn.s2, 1);
+		}
+	});
+	var tempStations = [];
+	var junctions = [];
+	stations.forEach(function(stat) {
+		if (endpointCounter.get(stat.code) == 1) {
+			endStations.push(stat);
+		}
+		if (endpointCounter.get(stat.code) != null) {
+			tempStations.push(stat);
+		}
+		if (endpointCounter.get(stat.code) > 2) {
+			junctions.push(stat);
+		}
+	});
+	var topStations = endStations.concat(junctions);
+	// Switch arrays around, just for testing
+	//intercityStations = endStations;
+	intercityStations = topStations;
+	//intercityStations = [];
 	
 	var incidentCounterMax = 1;
 	var linesInfoMap = new Map();
@@ -170,8 +236,13 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 		linesInfo.push(linesInfoMap.get(key));
 		key = itter.next().value;
 	}
-	
-	resultFull = resultFull.concat(linesInfo);
+	for (let c in resultFull) {
+		if (!contains(linesInfo, resultFull[c], ["s1","s2"]))
+			linesInfo.push(resultFull[c]);
+	}
+	//resultFull = resultFull.concat(linesInfo);
+	resultFull = linesInfo;
+	var topViewLines = aggregate(resultFull, endpointCounter);
 	
 	radius = 5;
 	var height = 800;
@@ -199,12 +270,19 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 			minY = Math.min(minY, d[1]);
 		});
 	});
+	
+	var incidentCounterMaxTopView = Number.MIN_VALUE;
+	var incidentCounterMinTopView = Number.MAX_VALUE;
+	topViewLines.forEach(function(path) {
+		incidentCounterMaxTopView = Math.max(incidentCounterMaxTopView, path.disruptions.length);
+		incidentCounterMinTopView = Math.min(incidentCounterMinTopView, path.disruptions.length);
+	});
 
 	var diff = (maxY - minY) / (maxX - minX);
 	//var diff = (maxX - minX) / (maxY - minY);
 	var width = diff * height;
 
-	var zoom = d3.behavior.zoom()
+	zoom = d3.behavior.zoom()
     .translate([0, 0])
     .scale(1)
     .scaleExtent([1, 14])
@@ -215,8 +293,7 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 										.attr("height", height)
 										.attr("id", "vis")
 										.call(zoom)
-											.append("g");
-	
+										.append("g");
 
 	var linearScaleX = d3.scale.linear()
 						.domain([minX,maxX])
@@ -226,7 +303,11 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 						.range([height-radius,radius]);
 	
 	var colorScale = d3.scale.linear()
-						.domain([0,incidentCounterMax])
+						.domain([1,incidentCounterMax])
+						.range(["grey","#FF0000"]);
+	
+	var colorScaleTopView = d3.scale.linear()
+						.domain([incidentCounterMinTopView,incidentCounterMaxTopView])
 						.range(["grey","#FF0000"]);
 	
 	linearScaleDisruptions = d3.scale.linear()
@@ -245,19 +326,47 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 					.attr("stroke-width", 0.5)
 					.attr("fill", "rgb(137,194,105)");
 	});
-	meer.coordinates.forEach(function(polygon) {
+	meer.polygons.forEach(function(polygon) {
 		mapLinesContainer.append("path")
-					.attr("d", lineFunction(polygon))
+					.attr("d", lineFunction(polygon.coordinates))
 					.attr("stroke", "black")
 					.attr("stroke-width", 0.5)
-					.attr("fill", "rgb(140,206,206)");
+					.attr("fill", polygon.type === "water" ? "rgb(140,206,206)" : "rgb(137,194,105)");
 	});
 	
+	strokeWidth = 5;
+	
+	var lineFunctionLines = d3.svg.line()
+							.x(function(d) {return linearScaleX(+d[0]);})
+							.y(function(d) {return linearScaleY(+d[1]);})
+							.interpolate("step-before");
+
 	var lines = svgContainer
+					.append("g")
+					.selectAll("path")
+					.data(topViewLines);
+	lines.enter()
+		.append("path")
+		.attr("d", function(d) { return lineFunction(d.coordinates); })
+		.on("click", function(d){ return myFunction(d.disruptions);})
+		.on("mouseover", function(d) {
+			d3.select(this).transition().duration(500).attr("stroke", "orange");
+		})
+		.on("mouseout", function(d) {
+			d3.select(this).transition()
+						.duration(200)
+						.attr("stroke",function(d) { return colorScaleTopView(d.disruptions.length); });
+		})
+		.attr("stroke", function(d) { return colorScaleTopView(d.disruptions.length); })
+		.attr("stroke-width", strokeWidth)
+		.attr("fill", "none");
+	//});
+	
+	/*var lines = svgContainer
 					.append("g")
 					.selectAll("line")
 					.data(resultFull);
-	strokeWidth = 4;
+	
 	lines.enter()
 	    .append("line")
 	    .on("click", function(d){ return myFunction(d.disruptions);})
@@ -266,8 +375,14 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 		.attr("x2", function(d){ return linearScaleX(d.s2_lng);})
 		.attr("y2", function(d){ return linearScaleY(d.s2_lat);})
 		//.attr("stroke-width", function(d) {return linearScaleDisruptions(d.disruptions.length);})
+		.on("mouseover", function(d) {
+			d3.select(this).transition().duration(500).attr("stroke", "orange");
+		})
+		.on("mouseout", function(d) {
+			d3.select(this).transition().duration(200).attr("stroke", colorScale(d.disruptions.length));
+	    })
 		.attr("stroke-width", strokeWidth)
-		.attr("stroke", function(d){ return colorScale(d.disruptions.length);});
+		.attr("stroke", function(d) { return colorScale(d.disruptions.length);});*/
 	
 	var circles =  svgContainer
 						.append("g")
@@ -276,8 +391,9 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 	
 	circles.enter()
 		.append("circle")
-		.style("fill", function(d) {
-			return d.type != "stoptreinstation" ? "black" : "white";
+		.style("fill-opacity", function(d) {
+			return 0;
+			//return d.type != "stoptreinstation" ? "black" : "white";
 		})
 		.on("mouseover", function(d) {
 		      var g = d3.select("#vis").select("g"); // The node
@@ -291,6 +407,10 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 	    .attr("cx", function(d){return linearScaleX(d.geo_lng);})
 	    .attr("cy", function(d){return linearScaleY(d.geo_lat);})
 	    .attr("r",radius)
+	    .style("stroke", function(d) {
+			return d.type != "stoptreinstation" ? "black" : "white";
+		})
+		.style("stroke-width", 2)
 	    .on("mouseout", function() {
 			// Remove the info text on mouse out.
 			d3.select("#vis").select('text.info').remove();
@@ -312,27 +432,23 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 }
 
 function zoomed() {
-	/*svgContainer.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-
-	svgContainer.selectAll("circle").attr("r", radius / d3.event.scale);
-	svgContainer.selectAll("line").attr("stroke-width", function(d) {
-		return strokeWidth / d3.event.scale;
-	});*/
 	setTranslateScale(d3.event.translate, d3.event.scale);
 }
 
 function setTranslateScale(translate, scale) {
 	svgContainer.attr("transform", "translate(" + translate + ")scale(" + scale + ")");
-	/*	svgContainer.selectAll("circle").forEach(function (d) {
-			d.attr("r", 2 / d3.event.scale);
-		});*/
-		svgContainer.selectAll("circle").attr("r", radius / scale);
-		svgContainer.selectAll("line").attr("stroke-width", function(d) {
-			//return linearScaleDisruptions(d.disruptions.length)/ d3.event.scale;
-			return strokeWidth / scale;
-		});
+	svgContainer.selectAll("circle").attr("r", radius / scale);
+	svgContainer.selectAll("line").attr("stroke-width", function(d) {
+		return strokeWidth / scale;
+	});
 }
 
 function resetMap() {
-	setTranslateScale("0,0", "1");
+	zoom.scale(1);
+	zoom.translate([0, 0]);
+	svgContainer.transition().duration(500).attr('transform', 'translate(' + zoom.translate() + ') scale(' + zoom.scale() + ')')
+	svgContainer.selectAll("circle").attr("r", radius);
+	svgContainer.selectAll("line").attr("stroke-width", function(d) {
+		return strokeWidth;
+	});
 }
