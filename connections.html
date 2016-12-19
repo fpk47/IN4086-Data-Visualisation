@@ -18,21 +18,24 @@
 <body>
 
 <div id="container" >
-	<div id="mapContainer" ></div>
+	<div id="mapContainer"></div>
 	<div id="infoContainer">
-		<h2 style="text-align: center">Select Time Period</h2>
+		<h2>Select Time Period</h2>
 
 		<div id="timeSliderArea">
 			<div style="float: left; width: 20%; text-align: center"> 2011 </div>
 			<div style="float: left; width: 60%" id= "slider1"></div>
 			<div style="float: left; width: 20%; text-align: center"> 2016 </div>
 		</div>
-		<div style="float: left" id="sliderValueStart"></div>
-		<div style="float: right" id="sliderValueEnd"></div>
-
-		<canvas style="float: left" id="amountPieChart"></canvas>
-		<canvas style="float: left" id="durationPieChart"></canvas>
-		<canvas style="float: center" id="myBarChart"></canvas>
+		<div>
+			<div style="float: left" id="sliderValueStart"></div>
+			<div style="float: right" id="sliderValueEnd"></div>
+		</div>
+		<div id="charts">
+			<canvas id="amountPieChart"></canvas>
+			<canvas id="durationPieChart"></canvas>
+		</div>
+		<canvas id="myBarChart"></canvas>
 	</div>
 </div>
 
