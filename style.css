@@ -16,6 +16,10 @@ display: block;
   float: left;
 }
 
+.selected {
+	stroke: "aquamarine";
+}
+
 #amountPieChart{
 	max-width: 50%;
 	max-height: 800px;
