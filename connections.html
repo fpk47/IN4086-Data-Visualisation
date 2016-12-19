@@ -23,27 +23,29 @@
 <body>
 
 <div id="container" >
-	<div id="mapContainer" ></div>
+	<div id="mapContainer"></div>
 	<div id="infoContainer">
-		<h2 style="text-align: center">Select Time Period</h2>
+		<h2>Select Time Period</h2>
 
 		<div id="timeSliderArea">
 			<div style="float: left; width: 20%; text-align: center"> 2011 </div>
 			<div style="float: left; width: 60%" id= "slider1"></div>
 			<div style="float: left; width: 20%; text-align: center"> 2016 </div>
 		</div>
-		<div style="float: left" id="sliderValueStart"></div>
-		<div style="float: right" id="sliderValueEnd"></div>
-
-		<canvas style="float: left" id="amountPieChart"></canvas>
-		<canvas style="float: left" id="durationPieChart"></canvas>
-
-<div style="display: inline; width: 100%; float: left" class="radio">
-  <input id="male" type="radio" name="gender" value="male">
-  <label for="male">Show Weekdays</label>
-  <input id="female" type="radio" name="gender" value="female">
-  <label for="female">Show Months</label>
-</div>
+		<div>
+			<div style="float: left" id="sliderValueStart"></div>
+			<div style="float: right" id="sliderValueEnd"></div>
+		</div>
+		<div id="charts">
+			<canvas id="amountPieChart"></canvas>
+			<canvas id="durationPieChart"></canvas>
+		</div>
+		<div style="display: inline; width: 100%; float: left" class="radio">
+			<input id="male" type="radio" name="gender" value="male">
+			<label for="male">Show Weekdays</label>
+			<input id="female" type="radio" name="gender" value="female">
+			<label for="female">Show Months</label>
+		</div>
 		<canvas style="float: center" id="myBarChart"></canvas>
 	</div>
 </div>

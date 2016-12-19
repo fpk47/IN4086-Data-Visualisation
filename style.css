@@ -2,9 +2,7 @@ body {
     background:#F5F5F5;
     font-family: 'Arial';
 }
-div {
-    margin: 0px;
-}
+
 h1 {
     color: black;
     font-family:"Helvetica";
@@ -16,22 +14,14 @@ display: block;
   float: left;
 }
 
-.selected {
-	stroke: "aquamarine";
-}
-
 #amountPieChart{
 	max-width: 50%;
 	max-height: 400px;
-	float: left;
-	overflow: auto;
 }
 
 #durationPieChart{
 	max-width: 50%;
 	max-height: 400px;
-	float: left;
-	overflow: auto;
 }
 
 #timeSliderArea {
@@ -40,23 +30,20 @@ display: block;
 
 #container {
 	width: 100%;
-	overflow: hidden;
-	text-align: center;
+	display: flex;
 }
 
 #mapContainer {
-	width: 50%;
-	overflow: hidden;
 	background: rgb(140,206,206);
-	float: left;
 }
 
 #infoContainer {
-	width: 50%;
-	overflow: hidden;
-	float: left;
+	margin-left: 10px;
+	flex-grow: 1;
+	display: flex;
+	flex-direction: column;
 }
 
-#resetButton {
-	float: left;
+#charts {
+	flex-grow: 1;
 }
