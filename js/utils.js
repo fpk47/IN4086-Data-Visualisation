@@ -84,6 +84,9 @@ function aggregate(input, connectionCount) {
 				todo.splice(iFound, 1);
 		});
 	}
+	
+	
+	
 	return sanitize(res);
 }
 
@@ -181,6 +184,30 @@ function findConnectionIndex(c1, c2, connections) {
 
 function equalsConnection(c1, c2) {
 	return c1.s1 === c2.s1 && c1.s2 === c2.s2;
+}
+
+function splitTrack(tracks, stationCode) {
+	var i = -1;
+	var newTrack1 = [];
+	var newTrack2 = [];
+	var notFound = true;
+	for (i = 0; i < tracks.length && notFound; i++) {
+		var track = tracks[i];
+		var temp1 = [];
+		for (var j = 0; j < track.length; j++) {
+			var edge = track[j];
+			temp1.push(edge);
+			newTrack2 = track.slice(j+1);
+			notFound = false;
+			break;
+		}
+	}
+	if (i != -1 && !notFound) {
+		tracks.splice(i);
+		tracks.push(newTrack1);
+		tracks.push(newTrack2);
+	}
+	return tracks;
 }
 
 function parseDate(input) {
