@@ -537,22 +537,4 @@ function updateViews() {
 		
 		updateTimeout = setTimeout(updateInfo(prevSelected[1].filtered), 1000);
 	}
-	console.log("called");
 }
-
-/*function checkBoxTop() {
-	var filter = [];
-	for (var i = 0; i < topIncidents.length; i++) {
-		filter.push([topIncidents[i][0], d3.select("#c" + i).node().checked]);
-	};
-	var other = d3.select("#c5").node().checked;
-	var res = filterData(filter, other, incidentData);
-	
-	var maxFiltered = Number.MIN_VALUE;
-	topViewLines.forEach(function(line) {
-		line.filtered = filterData(filter, other, line.disruptions);
-		maxFiltered = Math.max(maxFiltered, line.filtered.length);
-	});
-	colorScaleTopView.domain([0,maxFiltered]);
-	svgContainer.select("#tracks").selectAll("path").attr("stroke", function(d) { return colorScaleTopView(d.filtered.length); })
-}*/
