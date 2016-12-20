@@ -32,6 +32,10 @@
 			<div style="float: left; width: 60%" id= "slider1"></div>
 			<div style="float: left; width: 20%; text-align: center"> 2016 </div>
 		</div>
+		<div>
+			<div style="float: left" id="sliderValueStart"></div>
+			<div style="float: right" id="sliderValueEnd"></div>
+		</div>
 		<div id="checkboxes">
 			<div id="topCol">
 				<div><input type="checkbox" name="top" value="0" checked id="c0" /><label id="tl0" for="c0" ></label></div>
@@ -42,13 +46,7 @@
 				<div><input type="checkbox" name="top" value="5" checked id="c5" /><label id="tl5" for="c5" >Other</label></div>
 			</div>
 		</div>
-		<div>
-			<div style="float: left" id="sliderValueStart"></div>
-			<div style="float: right" id="sliderValueEnd"></div>
-		</div>
-
-		<br>
-
+		<h3 id="headerTrack"></h3>
 		<div id="charts">
 			<canvas id="amountPieChart"></canvas>
 			<canvas id="durationPieChart"></canvas>

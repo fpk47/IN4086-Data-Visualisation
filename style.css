@@ -64,4 +64,9 @@ hr {
 #topCol {
 	display:flex;
 	flex-direction: column;
+	
+}
+
+#headerTrack {
+	text-align: center;
 }

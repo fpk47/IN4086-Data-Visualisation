@@ -32,19 +32,8 @@ function getMin(columns, data) {
 
 
 function updateInfo(input){
-	//alert(input.length);
-	var svgContainer = d3.select("#infoContainer");
-	svgContainer.selectAll("p").remove();
-	svgContainer.selectAll("h4").remove();
-
 	updatePieCharts( input );
 	updateBarChartData( input );
-	/*
-	svgContainer.append("h4").text("Incidents: " + input.length);
-	input.forEach(function(d) {
-		var str = "Duration: " +d.DURATION + ", Cause: " + d.CAUSE;
-		svgContainer.append("p").text(str);
-	});*/
 }
 
 function join(lookupTable, mainTable, lookupKey, mainKey, isInner, select) {
@@ -252,6 +241,24 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 	//resultFull = resultFull.concat(linesInfo);
 	resultFull = linesInfo;
 	topViewLines = aggregate(resultFull, endpointCounter);
+	var topViewLines = join(stations, topViewLines, "code", "s1", true, function(track, station) {
+	    return {
+	    	s1: (station !== undefined) ? station.naam : "",
+	        s2: track.s2,
+	        coordinates: track.coordinates,
+    		disruptions: track.disruptions,
+			filtered: track.filtered
+	    };
+	});
+	var topViewLines = join(stations, topViewLines, "code", "s2", true, function(track, station) {
+	    return {
+	        s1: track.s1,
+	        s2: (station !== undefined) ? station.naam : "",
+	        coordinates: track.coordinates,
+    		disruptions: track.disruptions,
+			filtered: track.filtered
+	    };
+	});
 	
 	radius = 5;
 	var height = 800;
@@ -367,6 +374,8 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 			}
 			d3.select(this).attr("stroke", "orange").attr("class", "selected");
 			prevSelected = [d3.select(this), d];
+			
+			d3.select("#headerTrack").text(d.s1+" - " + d.s2);
 			
 			return updateInfo(d.filtered);
 		})
