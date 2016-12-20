@@ -2,6 +2,7 @@
  * 
  */
 updateTimeout = null;
+topIncidents = null;
 
 function getMax(columns, data) {
 	var res = [];
