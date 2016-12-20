@@ -142,7 +142,7 @@ function sanitize(bigConnections) {
 					disruptions.push(dis[d]);
 				}
 			}
-		res.push({coordinates:coordinates, disruptions:disruptions});
+		res.push({coordinates:coordinates, disruptions:disruptions, filtered:disruptions});
 		}
 	}
 	return res;
@@ -177,4 +177,27 @@ function parseDate(input) {
 	var p = parts[0].split("/");
 	var str = p[1]+"/"+p[0]+"/"+p[2] + " " + parts[1];
 	return new Date(str);
+}
+
+function filterData(filter, others, start, end, data) {
+	var res = [];
+	data.forEach(function(entry) {
+		var isTop = false;
+		filter.forEach(function(filt) {
+			if (entry.CAUSE === filt[0]) {
+				if (filt[1] && 
+						entry.START_DATE.getTime() > start.getTime() &&
+						entry.REAL_END_DATE < end.getTime()) {
+					res.push(entry);
+				}
+				isTop = true;
+			}
+		});
+		if (!isTop && others && 
+				entry.START_DATE.getTime() > start.getTime() &&
+				entry.REAL_END_DATE < end.getTime()) {
+			res.push(entry);
+		}
+	});
+	return res;
 }

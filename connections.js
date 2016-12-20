@@ -1,6 +1,7 @@
 /**
  * 
  */
+updateTimeout = null;
 
 function getMax(columns, data) {
 	var res = [];
@@ -29,7 +30,7 @@ function getMin(columns, data) {
 }
 
 
-function myFunction(input){
+function updateInfo(input){
 	//alert(input.length);
 	var svgContainer = d3.select("#infoContainer");
 	svgContainer.selectAll("p").remove();
@@ -104,8 +105,6 @@ var conns = d3.csv("data/connections0.csv", function(dataConns) {
 });
 
 function contains(array, object, keys) {
-	//var found = false;
-	if (object. s1 )
 	for (var i = 0; i < array.length; i++) {
 	var d = array[i];
 		var res = true;
@@ -126,7 +125,8 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 	        s2: connection.s2,
 	        s1_lat: (station !== undefined) ? station.geo_lat : null,
 	        s1_lng: (station !== undefined) ? station.geo_lng : null,
-    		disruptions: []
+    		disruptions: [],
+			filtered: []
 	    };
 	});
 	
@@ -139,7 +139,8 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 	        s2_lat: (station !== undefined) ? station.geo_lat : null,
 	        s2_lng: (station !== undefined) ? station.geo_lng : null,
 	        color: "black",
-	        disruptions: []
+	        disruptions: [],
+			filtered: []
 	    };
 	});
 
@@ -171,6 +172,10 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 			endpointCounter.set(conn.s2, 1);
 		}
 	});
+	// Trick the code into thinking that Winterswijk is a junction station
+	// Because it is the middle point of a big loop
+	endpointCounter.set("ww", endpointCounter.get("ww")+1);
+	
 	var tempStations = [];
 	var junctions = [];
 	stations.forEach(function(stat) {
@@ -209,7 +214,8 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 					s2_lat: statNew.geo_lat,
 					s2_lng: statNew.geo_lng,
 					color: "aquamarine",
-					disruptions: [d]
+					disruptions: [d],
+					filtered: [d]
 				};
 				var temp = [prev.code, statNew.code];
 				temp.sort();
@@ -221,6 +227,7 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 					else {
 						var entry = linesInfoMap.get(key);
 						entry.disruptions = entry.disruptions.concat([d]);
+						entry.filtered = entry.filtered.concat([d]);
 						linesInfoMap.set(key, entry);
 						incidentCounterMax = Math.max(incidentCounterMax, entry.disruptions.length);
 					}
@@ -242,7 +249,7 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 	}
 	//resultFull = resultFull.concat(linesInfo);
 	resultFull = linesInfo;
-	var topViewLines = aggregate(resultFull, endpointCounter);
+	topViewLines = aggregate(resultFull, endpointCounter);
 	
 	radius = 5;
 	var height = 800;
@@ -306,8 +313,8 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 						.domain([1,incidentCounterMax])
 						.range(["grey","#FF0000"]);
 	
-	var colorScaleTopView = d3.scale.linear()
-						.domain([incidentCounterMinTopView,incidentCounterMaxTopView])
+	colorScaleTopView = d3.scale.linear()
+						.domain([0,incidentCounterMaxTopView])
 						.range(["grey","#FF0000"]);
 	
 	linearScaleDisruptions = d3.scale.linear()
@@ -351,15 +358,15 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 		.attr("d", function(d) { return lineFunction(d.coordinates); })
 		.on("click", function(d) {
 			if (prevSelected != null) {
-				prevSelected.transition()
+				prevSelected[0].transition()
 					.duration(200)
-					.attr("stroke",function(d) { return colorScaleTopView(d.disruptions.length); });
-				prevSelected.attr("class", "");
+					.attr("stroke",function(d) { return colorScaleTopView(d.filtered.length); });
+				prevSelected[0].attr("class", "");
 			}
 			d3.select(this).attr("stroke", "orange").attr("class", "selected");
-			prevSelected = d3.select(this);
+			prevSelected = [d3.select(this), d];
 			
-			return myFunction(d.disruptions);
+			return updateInfo(d.filtered);
 		})
 		.on("mouseover", function(d) {
 			d3.select(this).transition().duration(500).attr("stroke", "orange");
@@ -369,11 +376,11 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 				d3.select(this).transition()
 							.duration(200)
 							.attr("stroke",function(d) { 
-								return colorScaleTopView(d.disruptions.length);
+								return colorScaleTopView(d.filtered.length);
 							});
 			}
 		})
-		.attr("stroke", function(d) { return colorScaleTopView(d.disruptions.length); })
+		.attr("stroke", function(d) { return colorScaleTopView(d.filtered.length); })
 		.attr("stroke-width", strokeWidth)
 		.attr("fill", "none");
 	
@@ -444,6 +451,9 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 		.text(buttonText)
 		.count(0)
 		.cb(resetMap)();
+	
+	incidentData = dataInfo;
+	makeCheckboxes(dataInfo);
 }
 
 function zoomed() {
@@ -467,3 +477,81 @@ function resetMap() {
 		return strokeWidth;
 	});
 }
+
+function makeCheckboxes(incidents) {
+	var causes = new Map();
+	incidents.forEach(function(incident) {
+		if (causes.get(incident.CAUSE) != null) {
+			var entry = causes.get(incident.CAUSE);
+			entry++;
+			causes.set(incident.CAUSE, entry);
+		}
+		else {
+			causes.set(incident.CAUSE, 1);
+		}
+	});
+	var c = [];
+	var itter = causes.keys();
+	var n = itter.next();
+	while (!n.done) {
+		var key = n.value;
+		c.push([key, causes.get(key)]);
+		n = itter.next();
+	}
+	c.sort(function(a,b) {
+		a = a[1];
+		b = b[1];
+		return a > b ? -1 : (a < b ? 1 : 0);
+	});
+	c.splice(5, c.length);
+	topIncidents = c;
+	
+	for (var i = 0; i < topIncidents.length; i++) {
+		d3.select("#tl" + i).text(topIncidents[i][0]);
+		d3.select("#c" + i).on("click", updateViews );
+	};
+	d3.select("#c5").on("click", updateViews );
+}
+
+function updateViews() {
+	if (updateTimeout != null)
+		clearTimeout(updateTimeout);
+	
+	var filter = [];
+	for (var i = 0; i < topIncidents.length; i++) {
+		filter.push([topIncidents[i][0], d3.select("#c" + i).node().checked]);
+	};
+	var other = d3.select("#c5").node().checked;
+	//var res = filterData(filter, other, incidentData);
+	
+	var maxFiltered = Number.MIN_VALUE;
+	topViewLines.forEach(function(line) {
+		line.filtered = filterData(filter, other, startDate, endDate, line.disruptions);
+		maxFiltered = Math.max(maxFiltered, line.filtered.length);
+	});
+	colorScaleTopView.domain([0,maxFiltered]);
+	svgContainer.select("#tracks").selectAll("path").attr("stroke", function(d) { return colorScaleTopView(d.filtered.length); })
+	if (prevSelected != null) {
+		prevSelected[0].attr("stroke", "orange")
+		
+		updateTimeout = setTimeout(updateInfo(prevSelected[1].filtered), 1000);
+	}
+	console.log("called");
+}
+
+/*function checkBoxTop() {
+	var filter = [];
+	for (var i = 0; i < topIncidents.length; i++) {
+		filter.push([topIncidents[i][0], d3.select("#c" + i).node().checked]);
+	};
+	var other = d3.select("#c5").node().checked;
+	var res = filterData(filter, other, incidentData);
+	
+	var maxFiltered = Number.MIN_VALUE;
+	topViewLines.forEach(function(line) {
+		line.filtered = filterData(filter, other, line.disruptions);
+		maxFiltered = Math.max(maxFiltered, line.filtered.length);
+	});
+	colorScaleTopView.domain([0,maxFiltered]);
+	svgContainer.select("#tracks").selectAll("path").attr("stroke", function(d) { return colorScaleTopView(d.filtered.length); })
+}*/

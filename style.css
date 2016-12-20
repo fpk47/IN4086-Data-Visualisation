@@ -50,3 +50,8 @@ display: block;
 #myBarChart {
 	flex-grow: 1;
 }
+
+#topCol {
+	display:flex;
+	flex-direction: column;
+}
