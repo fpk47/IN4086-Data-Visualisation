@@ -35,7 +35,8 @@ hr {
 }
 
 #timeSliderArea {
-	min-height: 40px;
+	margin-top: 20px; 
+	min-height: 30px;
 }
 
 #container {
@@ -53,11 +54,18 @@ hr {
 	flex-direction: column;
 }
 
+#checkboxes{
+	margin-top: 20px; 
+	text-align: center
+}
+
 #charts {
 	flex-grow: 1;
 }
 
 #myBarChart {
+	max-height: 300px;
+	float: center;
 	flex-grow: 1;
 }
 
