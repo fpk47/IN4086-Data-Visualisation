@@ -174,9 +174,6 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 			endpointCounter.set(conn.s2, 1);
 		}
 	});
-	// Trick the code into thinking that Winterswijk is a junction station
-	// Because it is the middle point of a big loop
-	endpointCounter.set("ww", endpointCounter.get("ww")+1);
 	
 	var tempStations = [];
 	var junctions = [];
@@ -188,6 +185,9 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 			tempStations.push(stat);
 		}
 		if (endpointCounter.get(stat.code) > 2) {
+			junctions.push(stat);
+		}
+		if (stat.code === "ww") {
 			junctions.push(stat);
 		}
 	});

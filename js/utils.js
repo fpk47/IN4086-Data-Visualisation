@@ -85,7 +85,8 @@ function aggregate(input, connectionCount) {
 		});
 	}
 	
-	
+	// Split the track containing Winterswijk, because it is the middle point of a big loop
+	res = splitTrack(res, "ww");
 	
 	return sanitize(res);
 }
@@ -187,23 +188,27 @@ function equalsConnection(c1, c2) {
 }
 
 function splitTrack(tracks, stationCode) {
-	var i = -1;
+	var index = -1;
 	var newTrack1 = [];
 	var newTrack2 = [];
 	var notFound = true;
-	for (i = 0; i < tracks.length && notFound; i++) {
+	for (var i = 0; i < tracks.length && notFound; i++) {
 		var track = tracks[i];
 		var temp1 = [];
 		for (var j = 0; j < track.length; j++) {
 			var edge = track[j];
 			temp1.push(edge);
-			newTrack2 = track.slice(j+1);
-			notFound = false;
-			break;
+			if (edge.s1 === stationCode || edge.s2 === stationCode) {
+				newTrack1 = temp1;
+				newTrack2 = track.slice(j+1);
+				index = i;
+				notFound = false;
+				break;
+			}
 		}
 	}
-	if (i != -1 && !notFound) {
-		tracks.splice(i);
+	if (index != -1 && !notFound) {
+		tracks.splice(index, 1);
 		tracks.push(newTrack1);
 		tracks.push(newTrack2);
 	}
