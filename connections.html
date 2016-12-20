@@ -36,16 +36,23 @@
 			<div style="float: left" id="sliderValueStart"></div>
 			<div style="float: right" id="sliderValueEnd"></div>
 		</div>
+
+		<br>
+
 		<div id="charts">
 			<canvas id="amountPieChart"></canvas>
 			<canvas id="durationPieChart"></canvas>
 		</div>
-		<div style="display: inline; width: 100%; float: left" class="radio">
-			<input id="male" type="radio" name="gender" value="male">
-			<label for="male">Show Weekdays</label>
-			<input id="female" type="radio" name="gender" value="female">
-			<label for="female">Show Months</label>
-		</div>
+
+		<br>
+
+			<div style="display:inline-block; text-align: center;" class="radio">
+				<input id="male" type="radio" name="gender" value="male" checked>
+				<label for="male">Weekdays</label>
+				<input id="female" type="radio" name="gender" value="female">
+				<label for="female">Months</label>
+			</div>
+
 		<canvas style="float: center" id="myBarChart"></canvas>
 	</div>
 </div>

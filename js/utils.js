@@ -1,3 +1,14 @@
+function getDuration( input ){
+	var timeMS = parseFloat(input.REAL_END_DATE.getTime()) - parseFloat(input.START_DATE.getTime());
+		timeMS /= 1000.0 * 60.0;
+
+	if ( isNaN(timeMS) ){
+		timeMS = 0;
+	}
+
+	return timeMS;
+}
+
 function aggregate(input, connectionCount) {
 	var res = [];
 	var connections = input.slice(0);

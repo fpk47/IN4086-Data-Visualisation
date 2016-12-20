@@ -36,6 +36,7 @@ function myFunction(input){
 	svgContainer.selectAll("h4").remove();
 
 	updatePieCharts( input );
+	updateBarChartData( input );
 	/*
 	svgContainer.append("h4").text("Incidents: " + input.length);
 	input.forEach(function(d) {
