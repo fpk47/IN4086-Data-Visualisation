@@ -515,26 +515,28 @@ function makeCheckboxes(incidents) {
 }
 
 function updateViews() {
-	if (updateTimeout != null)
-		clearTimeout(updateTimeout);
-	
-	var filter = [];
-	for (var i = 0; i < topIncidents.length; i++) {
-		filter.push([topIncidents[i][0], d3.select("#c" + i).node().checked]);
-	};
-	var other = d3.select("#c5").node().checked;
-	//var res = filterData(filter, other, incidentData);
-	
-	var maxFiltered = Number.MIN_VALUE;
-	topViewLines.forEach(function(line) {
-		line.filtered = filterData(filter, other, startDate, endDate, line.disruptions);
-		maxFiltered = Math.max(maxFiltered, line.filtered.length);
-	});
-	colorScaleTopView.domain([0,maxFiltered]);
-	svgContainer.select("#tracks").selectAll("path").attr("stroke", function(d) { return colorScaleTopView(d.filtered.length); })
-	if (prevSelected != null) {
-		prevSelected[0].attr("stroke", "orange")
+	if (topIncidents != null) {
+		if (updateTimeout != null)
+			clearTimeout(updateTimeout);
 		
-		updateTimeout = setTimeout(updateInfo(prevSelected[1].filtered), 1000);
+		var filter = [];
+		for (var i = 0; i < topIncidents.length; i++) {
+			filter.push([topIncidents[i][0], d3.select("#c" + i).node().checked]);
+		};
+		var other = d3.select("#c5").node().checked;
+		//var res = filterData(filter, other, incidentData);
+		
+		var maxFiltered = Number.MIN_VALUE;
+		topViewLines.forEach(function(line) {
+			line.filtered = filterData(filter, other, startDate, endDate, line.disruptions);
+			maxFiltered = Math.max(maxFiltered, line.filtered.length);
+		});
+		colorScaleTopView.domain([0,maxFiltered]);
+		svgContainer.select("#tracks").selectAll("path").attr("stroke", function(d) { return colorScaleTopView(d.filtered.length); })
+		if (prevSelected != null) {
+			prevSelected[0].attr("stroke", "orange")
+			
+			updateTimeout = setTimeout(updateInfo(prevSelected[1].filtered), 1000);
+		}
 	}
 }
