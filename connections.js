@@ -325,7 +325,7 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 	
 	colorScaleTopView = d3.scale.linear()
 						.domain([0,incidentCounterMaxTopView])
-						.range(["grey","#FF0000"]);
+						.range(["#00B700","#FF0000"]);
 	
 	linearScaleDisruptions = d3.scale.linear()
 						.domain([0, incidentCounterMax])
@@ -437,7 +437,7 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 	strokeWidthCircle = 1;
 	circles.enter()
 		.append("circle")
-		.style("opacity", "0.8")
+		.style("opacity", "0.9")
 		.on("mouseover", function(d) {
 		      var g = d3.select("#vis").select("g"); // The node
 		      // The class is used to remove the additional text later
