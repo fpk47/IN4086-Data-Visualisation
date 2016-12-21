@@ -61,10 +61,15 @@ hr {
 	flex-grow: 1;
 }
 
-#topCol {
-	display:flex;
+#topColLeft {
+	display: flex;
 	flex-direction: column;
-	
+	float: left;
+}
+#topColRight {
+	display: flex;
+	flex-direction: column;
+	float: right;
 }
 
 #headerTrack {

@@ -3,6 +3,7 @@
  */
 updateTimeout = null;
 topIncidents = null;
+allData = true;
 
 function getMax(columns, data) {
 	var res = [];
@@ -241,7 +242,7 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 	//resultFull = resultFull.concat(linesInfo);
 	resultFull = linesInfo;
 	topViewLines = aggregate(resultFull, endpointCounter);
-	var topViewLines = join(stations, topViewLines, "code", "s1", true, function(track, station) {
+	topViewLines = join(stations, topViewLines, "code", "s1", true, function(track, station) {
 	    return {
 	    	s1: (station !== undefined) ? station.naam : "",
 	        s2: track.s2,
@@ -250,7 +251,7 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 			filtered: track.filtered
 	    };
 	});
-	var topViewLines = join(stations, topViewLines, "code", "s2", true, function(track, station) {
+	topViewLines = join(stations, topViewLines, "code", "s2", true, function(track, station) {
 	    return {
 	        s1: track.s1,
 	        s2: (station !== undefined) ? station.naam : "",
@@ -260,7 +261,7 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 	    };
 	});
 	
-	radius = 5;
+	radius = 7;
 	var height = 800;
 
 	var maxX = 0;
@@ -304,7 +305,7 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
     .scaleExtent([1, 14])
     .on("zoom", zoomed);
 	
-	svgContainer = d3.select("#mapContainer").append("svg")
+	svgContainer = d3.select("#mapContainer").select("svg")
 										.attr("width", width)
 										.attr("height", height)
 										.attr("id", "vis")
@@ -332,7 +333,8 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 	
 	var lineFunction = d3.svg.line()
 				.x(function(d) {return linearScaleX(+d[0]);})
-				.y(function(d) {return linearScaleY(+d[1]);});
+				.y(function(d) {return linearScaleY(+d[1]);})
+				.interpolate("linear");
 
 	var mapLinesContainer = svgContainer.append("g");
 	map.coordinates.forEach(function(polygon) {
@@ -350,7 +352,8 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 					.attr("fill", polygon.type === "water" ? "rgb(140,206,206)" : "rgb(137,194,105)");
 	});
 	
-	strokeWidth = 5;
+	strokeWidth = 6;
+	fontSize = 20;
 	
 	var lineFunctionLines = d3.svg.line()
 							.x(function(d) {return linearScaleX(+d[0]);})
@@ -366,26 +369,36 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 		.append("path")
 		.attr("d", function(d) { return lineFunction(d.coordinates); })
 		.on("click", function(d) {
-			if (prevSelected != null) {
-				prevSelected[0].transition()
+			if (prevSelected[0] != null) {
+				prevSelected[0]
+					.transition()
 					.duration(200)
 					.attr("stroke",function(d) { return colorScaleTopView(d.filtered.length); });
 				prevSelected[0].attr("class", "");
+				if (prevSelected[1] != d) {
+					d3.select(this).attr("stroke", "orange").attr("class", "selected");
+					prevSelected = [d3.select(this), d];
+					d3.select("#headerTrack").text(d.s1+" - " + d.s2);
+				}
+				else {
+					prevSelected = [null, {filtered:incidentData}];
+					d3.select("#headerTrack").text("Nederland");
+				}
 			}
-			d3.select(this).attr("stroke", "orange").attr("class", "selected");
-			prevSelected = [d3.select(this), d];
-			
-			d3.select("#headerTrack").text(d.s1+" - " + d.s2);
-			
-			return updateInfo(d.filtered);
+			else {
+				d3.select(this).attr("stroke", "orange").attr("class", "selected");
+				prevSelected = [d3.select(this), d];
+				d3.select("#headerTrack").text(d.s1+" - " + d.s2);
+			}
+			updateInfo(prevSelected[1].filtered);
 		})
 		.on("mouseover", function(d) {
-			d3.select(this).transition().duration(500).attr("stroke", "orange");
+			d3.select(this).transition().duration(300).attr("stroke", "orange");
 		})
 		.on("mouseout", function(d) {
 			if (d3.select(this).attr("class") != "selected") {
 				d3.select(this).transition()
-							.duration(200)
+							.duration(300)
 							.attr("stroke",function(d) { 
 								return colorScaleTopView(d.filtered.length);
 							});
@@ -421,29 +434,28 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 						.append("g")
 						.selectAll("circle")
 						.data(intercityStations);
-	
+	strokeWidthCircle = 1;
 	circles.enter()
 		.append("circle")
-		.style("fill-opacity", function(d) {
-			return 0;
-			//return d.type != "stoptreinstation" ? "black" : "white";
-		})
+		.style("opacity", "0.8")
 		.on("mouseover", function(d) {
 		      var g = d3.select("#vis").select("g"); // The node
 		      // The class is used to remove the additional text later
 		      var info = g.append('text')
 	         .classed('info', true)
-	         .attr('x', 2 + linearScaleX(d.geo_lng) )
-	         .attr('y', 2 + linearScaleY(d.geo_lat) )
+	         .attr("x", linearScaleX(d.geo_lng) )
+	         .attr("y", linearScaleY(d.geo_lat) - (10 / zoom.scale()) )
+	         .attr("text-anchor", "middle")
+	         .attr("font-size", fontSize / zoom.scale())
+	         .attr("fill", "#FFFFFF")
 	         .text(d.naam);
 		 })
 	    .attr("cx", function(d){return linearScaleX(d.geo_lng);})
 	    .attr("cy", function(d){return linearScaleY(d.geo_lat);})
 	    .attr("r",radius)
-	    .style("stroke", function(d) {
-			return d.type != "stoptreinstation" ? "black" : "white";
-		})
-		.style("stroke-width", 2)
+	    //.style("stroke", "white")
+		.attr("fill", "rgb(250,193,116)")
+		.style("stroke-width", strokeWidthCircle)
 	    .on("mouseout", function() {
 			// Remove the info text on mouse out.
 			d3.select("#vis").select('text.info').remove();
@@ -452,10 +464,10 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 	var buttonContainer = d3.select("#vis")
 							.append("g")
 							.attr("class", "button")
-							.attr("transform", "translate(" + 50 + "," + 30 + ")");
+							.attr("transform", "translate(" + 60 + "," + 30 + ")");
 	var buttonText = buttonContainer
 							.append("text")
-							.text("Reset\nMap");
+							.text("Alles Bekijken");
 
 	var btn = button()
 		.container(buttonContainer)
@@ -465,6 +477,10 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 	
 	incidentData = dataInfo;
 	makeCheckboxes(dataInfo);
+	
+	startDate = new Date( timestamp('2011')  );
+	endDate = new Date( timestamp('2016')  );
+	resetMap();
 }
 
 function zoomed() {
@@ -473,10 +489,8 @@ function zoomed() {
 
 function setTranslateScale(translate, scale) {
 	svgContainer.attr("transform", "translate(" + translate + ")scale(" + scale + ")");
-	svgContainer.selectAll("circle").attr("r", radius / scale);
-	svgContainer.select("#tracks").selectAll("path").attr("stroke-width", function(d) {
-		return strokeWidth / scale;
-	});
+	svgContainer.selectAll("circle").attr("r", radius / scale + (0.015*(scale-1)));
+	svgContainer.select("#tracks").selectAll("path").attr("stroke-width", strokeWidth / scale + (0.015*(scale-1)));
 }
 
 function resetMap() {
@@ -487,6 +501,15 @@ function resetMap() {
 	svgContainer.select("#tracks").selectAll("path").attr("stroke-width", function(d) {
 		return strokeWidth;
 	});
+	var filtered = filterAllData();
+	d3.select("#headerTrack").text("Nederland");
+	prevSelected = [null, {filtered:filtered}];
+	updateViews();
+}
+
+function filterAllData() {
+	var filter = getFilter();
+	return filterData(filter[0], filter[1], startDate, endDate, incidentData);
 }
 
 function makeCheckboxes(incidents) {
@@ -524,29 +547,41 @@ function makeCheckboxes(incidents) {
 	d3.select("#c5").on("click", updateViews );
 }
 
+function getFilter() {
+	var filter = [];
+	for (var i = 0; i < topIncidents.length; i++) {
+		filter.push([topIncidents[i][0], d3.select("#c" + i).node().checked]);
+	};
+	var other = d3.select("#c5").node().checked;
+	return [filter, other];
+}
+
 function updateViews() {
 	if (topIncidents != null) {
 		if (updateTimeout != null)
 			clearTimeout(updateTimeout);
 		
-		var filter = [];
-		for (var i = 0; i < topIncidents.length; i++) {
-			filter.push([topIncidents[i][0], d3.select("#c" + i).node().checked]);
-		};
-		var other = d3.select("#c5").node().checked;
-		//var res = filterData(filter, other, incidentData);
+		var filter = getFilter();
 		
 		var maxFiltered = Number.MIN_VALUE;
 		topViewLines.forEach(function(line) {
-			line.filtered = filterData(filter, other, startDate, endDate, line.disruptions);
+			line.filtered = filterData(filter[0], filter[1], startDate, endDate, line.disruptions);
 			maxFiltered = Math.max(maxFiltered, line.filtered.length);
 		});
 		colorScaleTopView.domain([0,maxFiltered]);
 		svgContainer.select("#tracks").selectAll("path").attr("stroke", function(d) { return colorScaleTopView(d.filtered.length); })
-		if (prevSelected != null) {
+		if (prevSelected[0] != null) {
 			prevSelected[0].attr("stroke", "orange")
-			
-			updateTimeout = setTimeout(updateInfo(prevSelected[1].filtered), 1000);
+			if (prevSelected[1] != null) {
+				updateTimeout = setTimeout(updateInfo(prevSelected[1].filtered), 1000);
+			}
 		}
+		else {
+			if (prevSelected[1] != null) {
+				updateTimeout = setTimeout(updateInfo(filterAllData()), 1000);
+			}
+		}
+		
+		
 	}
 }
