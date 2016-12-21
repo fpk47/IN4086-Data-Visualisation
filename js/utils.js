@@ -96,37 +96,41 @@ function sanitize(bigConnections) {
 	
 	for (let q in bigConnections) {
 		var track = bigConnections[q];
-		
+
+		var start;
+		var prevCode;
 		var coordinates = [];
 		if (track.length == 1) {
 			coordinates.push([track[0].s1_lng, track[0].s1_lat]);
 			coordinates.push([track[0].s2_lng, track[0].s2_lat]);
 		}
 		else {
-			
-			var prevCode;
 			for (var i = 0; i < track.length; i++) {
 				var edge = track[i];
 				if (i == 1) {
 					if (edge.s1 === track[0].s1) {
+						start = track[0].s2;
 						coordinates.push([track[0].s2_lng, track[0].s2_lat]);
 						coordinates.push([edge.s1_lng, edge.s1_lat]);
 						coordinates.push([edge.s2_lng, edge.s2_lat]);
 						prevCode = edge.s2;
 					}
 					else if (edge.s1 === track[0].s2) {
+						start = track[0].s1;
 						coordinates.push([track[0].s1_lng, track[0].s1_lat]);
 						coordinates.push([edge.s1_lng, edge.s1_lat]);
 						coordinates.push([edge.s2_lng, edge.s2_lat]);
 						prevCode = edge.s2;
 					}
 					else if (edge.s2 === track[0].s1) {
+						start = track[0].s2;
 						coordinates.push([track[0].s2_lng, track[0].s2_lat]);
 						coordinates.push([edge.s2_lng, edge.s2_lat]);
 						coordinates.push([edge.s1_lng, edge.s1_lat]);
 						prevCode = edge.s1;
 					}
 					else if (edge.s2 === track[0].s2) {
+						start = track[0].s1;
 						coordinates.push([track[0].s1_lng, track[0].s1_lat]);
 						coordinates.push([edge.s2_lng, edge.s2_lat]);
 						coordinates.push([edge.s1_lng, edge.s1_lat]);
@@ -157,7 +161,13 @@ function sanitize(bigConnections) {
 					disruptions.push(dis[d]);
 				}
 			}
-		res.push({coordinates:coordinates, disruptions:disruptions, filtered:disruptions});
+		res.push({
+			s1:start,
+			s2:prevCode,
+			coordinates:coordinates,
+			disruptions:disruptions,
+			filtered:disruptions
+			});
 		}
 	}
 	return res;

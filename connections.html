@@ -23,7 +23,9 @@
 <body>
 
 <div id="container" >
-	<div id="mapContainer"></div>
+	<div id="mapContainer">
+		<svg width="500" height="800"></svg>
+	</div>
 	<div id="infoContainer">
 		<div id="timeSliderArea">
 			<div style="float: left; width: 20%; text-align: center"> 2011 </div>
@@ -35,18 +37,18 @@
 			<div style="float: right" id="sliderValueEnd"></div>
 		</div>
 		<div id="checkboxes">
-			<div id="topCol">
-				<div><input type="checkbox" name="top" value="0" checked id="c0" /><label id="tl0" for="c0" ></label>
-				<input type="checkbox" name="top" value="1" checked id="c1" /><label id="tl1" for="c1" ></label>
-				<input type="checkbox" name="top" value="2" checked id="c2" /><label id="tl2" for="c2" ></label></div>
-				<div><input type="checkbox" name="top" value="3" checked id="c3" /><label id="tl3" for="c3" ></label>
-				<input type="checkbox" name="top" value="4" checked id="c4" /><label id="tl4" for="c4" ></label>
-				<input type="checkbox" name="top" value="5" checked id="c5" /><label id="tl5" for="c5" >Other</label></div>
+			<div id="topColLeft">
+				<div><input type="checkbox" name="top" value="0" checked id="c0" /><label id="tl0" for="c0" ></label></div>
+				<div><input type="checkbox" name="top" value="1" checked id="c1" /><label id="tl1" for="c1" ></label></div>
+				<div><input type="checkbox" name="top" value="2" checked id="c2" /><label id="tl2" for="c2" ></label></div>
+			</div>
+			<div id="topColRight">
+				<div><input type="checkbox" name="top" value="3" checked id="c3" /><label id="tl3" for="c3" ></label></div>
+				<div><input type="checkbox" name="top" value="4" checked id="c4" /><label id="tl4" for="c4" ></label></div>
+				<div><input type="checkbox" name="top" value="5" checked id="c5" /><label id="tl5" for="c5" >Overigen</label></div>
 			</div>
 		</div>
-
-		<br>
-
+		<h3 id="headerTrack"></h3>
 		<div id="charts">
 			<canvas id="amountPieChart"></canvas>
 			<canvas id="durationPieChart"></canvas>
@@ -68,7 +70,7 @@
 <script src="lib/pieChart.js"></script>
 <script src="lib/barChart.js"></script>
 <script src="js/utils.js"></script>
-<script src="connections.js"></script>
 <script src="lib/timeSlider.js"></script>
+<script src="connections.js"></script>
 </body>
 </html>
