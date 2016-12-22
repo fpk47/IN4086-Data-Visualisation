@@ -7,7 +7,7 @@ allData = true;
 strokeWidth = 6;
 fontSize = 20;
 radius = 7;
-prevSelected = null;
+prevSelected = [null, null];
 
 function updateInfo(input){
 	updatePieCharts( input );
@@ -402,6 +402,9 @@ function resetMap() {
 	});
 	var filtered = filterAllData();
 	d3.select("#headerTrack").text("Nederland");
+	if (prevSelected[0] != null) {
+		prevSelected[0].attr("class", "");
+	}
 	prevSelected = [null, {filtered:filtered}];
 	updateViews();
 }
