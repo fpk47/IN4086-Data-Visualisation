@@ -381,7 +381,7 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 					d3.select("#headerTrack").text(d.s1+" - " + d.s2);
 				}
 				else {
-					prevSelected = [null, {filtered:incidentData}];
+					prevSelected = [null, {filtered:filterAllData(incidentData)}];
 					d3.select("#headerTrack").text("Nederland");
 				}
 			}
