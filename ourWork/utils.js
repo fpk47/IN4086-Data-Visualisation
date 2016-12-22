@@ -56,13 +56,15 @@ function aggregate(input, connectionCount) {
 		}
 		res.push(newConn);
 		var newTodo = findConnected(working, connections);
-		// check if the other side is already added to todo
+
 		newTodo.forEach(function(td) {
 			var other;
 			if (working === connections[td].s1)
 				other = connections[td].s2;
 			else
 				other = connections[td].s1;
+			
+			
 			
 			var found = false;
 			for (let i in todo ) {
@@ -74,15 +76,17 @@ function aggregate(input, connectionCount) {
 					todo.push({start:working, edge:connections[td]});					
 				}
 			}
-			var iFound = -1;
-			for (let i in todo ) {
-				if (todo[i].edge.s1 === newConn[newConn.length-1].s1 &&
-							todo[i].edge.s2 === newConn[newConn.length-1].s2)
-					iFound = i;
-			}
-			if (iFound != -1)
-				todo.splice(iFound, 1);
 		});
+		// check if the other side is already added to todo
+		var iFound = -1;
+		for (let i in todo ) {
+			if (todo[i].edge.s1 === newConn[newConn.length-1].s1 &&
+						todo[i].edge.s2 === newConn[newConn.length-1].s2) {
+				iFound = i;
+			}
+		}
+		if (iFound != -1)
+			todo.splice(iFound, 1);
 	}
 	
 	// Split the track containing Winterswijk, because it is the middle point of a big loop
@@ -103,6 +107,8 @@ function sanitize(bigConnections) {
 		if (track.length == 1) {
 			coordinates.push([track[0].s1_lng, track[0].s1_lat]);
 			coordinates.push([track[0].s2_lng, track[0].s2_lat]);
+			start = track[0].s1;
+			prevCode = track[0].s2;
 		}
 		else {
 			for (var i = 0; i < track.length; i++) {

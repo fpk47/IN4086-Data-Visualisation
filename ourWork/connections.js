@@ -7,6 +7,7 @@ allData = true;
 strokeWidth = 6;
 fontSize = 20;
 radius = 7;
+prevSelected = null;
 
 function updateInfo(input){
 	updatePieCharts( input );
@@ -152,13 +153,7 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 			prev = statNew;
 		});
 	});
-	var linesInfo = [];
-	var itter = linesInfoMap.keys()
-	var key = itter.next().value;
-	while (key != null) {
-		linesInfo.push(linesInfoMap.get(key));
-		key = itter.next().value;
-	}
+	var linesInfo = Array.from(linesInfoMap.values());
 	for (let c in resultFull) {
 		if (!contains(linesInfo, resultFull[c], ["s1","s2"]))
 			linesInfo.push(resultFull[c]);
@@ -263,14 +258,7 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 					.attr("stroke-width", 0.5)
 					.attr("fill", polygon.type === "water" ? "rgb(140,206,206)" : "rgb(137,194,105)");
 	});
-	
-	
-	
-	var lineFunctionLines = d3.svg.line()
-							.x(function(d) {return linearScaleX(+d[0]);})
-							.y(function(d) {return linearScaleY(+d[1]);})
-							.interpolate("step-before");
-	prevSelected = null;
+
 	var lines = svgContainer
 					.append("g")
 					.attr("id", "tracks")
