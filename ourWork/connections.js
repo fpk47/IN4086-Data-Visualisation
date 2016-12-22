@@ -484,12 +484,12 @@ function updateViews() {
 		if (prevSelected[0] != null) {
 			prevSelected[0].attr("stroke", "orange")
 			if (prevSelected[1] != null) {
-				updateTimeout = setTimeout(function() {updateInfo(prevSelected[1].filtered)}, 1000);
+				updateTimeout = setTimeout(function() {updateInfo(prevSelected[1].filtered)}, 500);
 			}
 		}
 		else {
 			if (prevSelected[1] != null) {
-				updateTimeout = setTimeout(function() {updateInfo(filterAllData())}, 1000);
+				updateTimeout = setTimeout(function() {updateInfo(filterAllData())}, 500);
 			}
 		}
 	}
