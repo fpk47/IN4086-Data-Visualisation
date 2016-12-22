@@ -254,3 +254,70 @@ function filterData(filter, others, start, end, data) {
 	});
 	return res;
 }
+
+function getMax(columns, data) {
+	var res = [];
+	for (var i_columns = 0; i_columns < columns.length; i_columns++) {
+		res[i_columns] = Number.MIN_VALUE;
+	}
+	data.forEach(function(d) {
+		for (var i_columns = 0; i_columns < columns.length; i_columns++) {
+			res[i_columns] = Math.max(res[i_columns], d[columns[i_columns]]);
+		}
+	});
+	return res;
+}
+
+function getMin(columns, data) {
+	var res = [];
+	for (var i_columns = 0; i_columns < columns.length; i_columns++) {
+		res[i_columns] = Number.MAX_VALUE;
+	}
+	data.forEach(function(d) {
+		for (var i_columns = 0; i_columns < columns.length; i_columns++) {
+			res[i_columns] = Math.min(res[i_columns], d[columns[i_columns]]);
+		}
+	});
+	return res;
+}
+
+function join(lookupTable, mainTable, lookupKey, mainKey, isInner, select) {
+    var l = lookupTable.length,
+        m = mainTable.length,
+        lookupIndex = new Map(),
+        output = [];
+    for (var i = 0; i < l; i++) { // loop through l items
+        var row = lookupTable[i];
+        lookupIndex.set(row[lookupKey], row); // create an index for lookup table
+    }
+    for (var j = 0; j < m; j++) { // loop through m items
+        var y = mainTable[j];
+        var x = lookupIndex.get(y[mainKey]); // get corresponding row from lookupTable
+        if (!isInner || x != null) {
+        	output.push(select(y, x)); // select only the columns you need
+        }
+    }
+    return output;
+}
+
+function objectEquals(obj1, obj2) {
+	var res = true;
+	Object.keys(obj1).forEach(function (key) {
+		res &= obj1[key] === obj2[key];
+	});
+	return res;
+}
+
+function contains(array, object, keys) {
+	for (var i = 0; i < array.length; i++) {
+	var d = array[i];
+		var res = true;
+		keys.forEach(function(key) {
+			res &= (d[key] === object[key]);
+		});
+		if (res) {
+			return res;
+		}
+	}
+	return false;
+}

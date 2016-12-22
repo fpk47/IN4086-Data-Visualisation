@@ -4,64 +4,13 @@
 updateTimeout = null;
 topIncidents = null;
 allData = true;
-
-function getMax(columns, data) {
-	var res = [];
-	for (var i_columns = 0; i_columns < columns.length; i_columns++) {
-		res[i_columns] = Number.MIN_VALUE;
-	}
-	data.forEach(function(d) {
-		for (var i_columns = 0; i_columns < columns.length; i_columns++) {
-			res[i_columns] = Math.max(res[i_columns], d[columns[i_columns]]);
-		}
-	});
-	return res;
-}
-
-function getMin(columns, data) {
-	var res = [];
-	for (var i_columns = 0; i_columns < columns.length; i_columns++) {
-		res[i_columns] = Number.MAX_VALUE;
-	}
-	data.forEach(function(d) {
-		for (var i_columns = 0; i_columns < columns.length; i_columns++) {
-			res[i_columns] = Math.min(res[i_columns], d[columns[i_columns]]);
-		}
-	});
-	return res;
-}
-
+strokeWidth = 6;
+fontSize = 20;
+radius = 7;
 
 function updateInfo(input){
 	updatePieCharts( input );
 	updateBarChartData( input );
-}
-
-function join(lookupTable, mainTable, lookupKey, mainKey, isInner, select) {
-    var l = lookupTable.length,
-        m = mainTable.length,
-        lookupIndex = new Map(),
-        output = [];
-    for (var i = 0; i < l; i++) { // loop through l items
-        var row = lookupTable[i];
-        lookupIndex.set(row[lookupKey], row); // create an index for lookup table
-    }
-    for (var j = 0; j < m; j++) { // loop through m items
-        var y = mainTable[j];
-        var x = lookupIndex.get(y[mainKey]); // get corresponding row from lookupTable
-        if (!isInner || x != null) {
-        	output.push(select(y, x)); // select only the columns you need
-        }
-    }
-    return output;
-}
-
-function objectEquals(obj1, obj2) {
-	var res = true;
-	Object.keys(obj1).forEach(function (key) {
-		res &= obj1[key] === obj2[key];
-	});
-	return res;
 }
 
 var conns = d3.csv("data/connections0.csv", function(dataConns) {
@@ -96,20 +45,6 @@ var conns = d3.csv("data/connections0.csv", function(dataConns) {
 	});
 });
 
-function contains(array, object, keys) {
-	for (var i = 0; i < array.length; i++) {
-	var d = array[i];
-		var res = true;
-		keys.forEach(function(key) {
-			res &= (d[key] === object[key]);
-		});
-		if (res) {
-			return res;
-		}
-	}
-	return false;
-}
-
 function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 	var resultIntermediate = join(stations, connections, "code", "s1", true, function(connection, station) {
 	    return {
@@ -135,14 +70,7 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 			filtered: []
 	    };
 	});
-
-	// Make a selection of stations without 'stoptrein' stations
-	var intercityStations = [];
-	stations.forEach(function(d) {
-		if ( d.type != "stoptreinstation" ){
-			intercityStations.push(d);
-		}
-	});
+	
 	// Select end points of lines
 	var endStations = [];
 	var endpointCounter = new Map();
@@ -182,10 +110,6 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 		}
 	});
 	var topStations = endStations.concat(junctions);
-	// Switch arrays around, just for testing
-	//intercityStations = endStations;
-	intercityStations = topStations;
-	//intercityStations = [];
 	
 	var incidentCounterMax = 1;
 	var linesInfoMap = new Map();
@@ -261,24 +185,13 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 	    };
 	});
 	
-	radius = 7;
+	
 	var height = 800;
 
 	var maxX = 0;
 	var minX = 99999999;
 	var maxY = 0;
 	var minY = 99999999;
-	/*resultFull.forEach(function(d) {
-	    var z = d;
-	    maxX = Math.max(maxX, z.s1_lng);
-	    maxX = Math.max(maxX, z.s2_lng);
-	    minX = Math.min(minX, z.s1_lng);
-	    minX = Math.min(minX, z.s2_lng);
-	    maxY = Math.max(maxY, z.s1_lat);
-	    maxY = Math.max(maxY, z.s2_lat);
-	    minY = Math.min(minY, z.s1_lat);
-	    minY = Math.min(minY, z.s2_lat);
-	});*/
 	map.coordinates.forEach(function(parts) {
 		parts.forEach(function(d) {
 			maxX = Math.max(maxX, d[0]);
@@ -296,14 +209,13 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 	});
 
 	var diff = (maxY - minY) / (maxX - minX);
-	//var diff = (maxX - minX) / (maxY - minY);
 	var width = diff * height;
 
 	zoom = d3.behavior.zoom()
-    .translate([0, 0])
-    .scale(1)
-    .scaleExtent([1, 14])
-    .on("zoom", zoomed);
+	    .translate([0, 0])
+	    .scale(1)
+	    .scaleExtent([1, 14])
+	    .on("zoom", zoomed);
 	
 	svgContainer = d3.select("#mapContainer").select("svg")
 										.attr("width", width)
@@ -352,8 +264,7 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 					.attr("fill", polygon.type === "water" ? "rgb(140,206,206)" : "rgb(137,194,105)");
 	});
 	
-	strokeWidth = 6;
-	fontSize = 20;
+	
 	
 	var lineFunctionLines = d3.svg.line()
 							.x(function(d) {return linearScaleX(+d[0]);})
@@ -433,7 +344,7 @@ function getJoinAndRender(stations, connections, map, meer, dataInfo) {
 	var circles =  svgContainer
 						.append("g")
 						.selectAll("circle")
-						.data(intercityStations);
+						.data(topStations);
 	strokeWidthCircle = 1;
 	circles.enter()
 		.append("circle")
@@ -581,7 +492,5 @@ function updateViews() {
 				updateTimeout = setTimeout(function() {updateInfo(filterAllData())}, 1000);
 			}
 		}
-		
-		
 	}
 }
